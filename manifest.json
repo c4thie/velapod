@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Spotify Podcast",
+  "version": "1.0",
+  "description": "Browse and play Spotify podcasts",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "declarativeContent",
+    "i18n"
+  ],
+  "host_permissions": [
+    "https://api.spotify.com/*",
+    "https://accounts.spotify.com/*",
+    "https://open.spotify.com/*",
+    "https://www.spotify.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "128": "icons/128.png",
+    "64": "64.png",
+    "32": "icons/32.png",
+    "16": "icons/16.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_name": "Spotify Podcast",
+    "default_icon": "64.png",
+    "default_locale": "en"
+  },
+  "default_locale": "en",
+  "content_scripts": [
+    {
+      "matches": ["https://open.spotify.com/*"],
+      "js": ["content-script.js"],
+      "run_at": "document_end",
+      "all_frames": false
+    }
+  ]
+}

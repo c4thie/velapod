@@ -1,0 +1,117 @@
+/* popup.css */
+
+:root {
+  /* background: rgb(7,77,33);
+  background: linear-gradient(0deg, rgba(7,77,33,1) 23%, rgba(100,156,114,1) 92%); */
+  background: rgb(27,48,32);
+  background: linear-gradient(0deg, rgba(27,48,32,1) 25%, rgba(7,77,33,1) 90%);
+}
+body {
+  display: flex;
+  flex-direction: column;
+
+  width: 600px;
+  padding: 10px;
+  font-family: 'Switzer', sans-serif;
+}
+
+.podcast-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start; /* Align items to the top */
+}
+
+.podcast-container h3 {
+  color: white;
+  font-size: 24px;
+  letter-spacing: 0.3px;
+  margin-bottom: 0.5em;
+  width: 100vw;
+}
+
+.podcast-selection {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.myshows, .episodes {
+  display: block;
+}
+
+.myshows p {
+  width: 110px;
+  align-self: center;
+}
+
+.myshows-container {
+  display: grid; /* Use grid layout for better alignment */
+  grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+  gap: 2px;
+}
+
+.episodes-container {
+  display: grid; /* Use grid layout */
+  grid-template-columns: repeat(2, 1fr); /* Two equal columns */
+  gap: 2px; /* Gap between items */
+}
+
+.shows-details-container {
+  display: flex;
+  max-height: 50px;
+  overflow-x: clip;
+  overflow-y: clip;
+
+  justify-content: space-around;
+  align-items: center;
+  gap: 5px;
+}
+
+.show img {
+  width: 42px;
+  height: 42px;
+}
+
+.episodes-details-container {
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 50px;
+  overflow-x: clip;
+  overflow-y: clip;
+  align-items: center;
+
+  padding: 2px 7px;
+
+}
+
+.show {
+  width: 190px;
+}
+
+.episode {
+  width: 295px;
+}
+
+.episode, .show {
+  margin-bottom: 7px;
+  margin-right: 7px;
+  padding: 2px;
+  cursor: pointer;
+  /* background-color: #f0f0f0; */
+  background: rgb(214,214,214);
+  background: linear-gradient(0deg, rgba(230,230,230,0.92) 0%, rgba(240,240,240,0.97) 33%, rgba(240,240,240,1) 73%, rgba(230,230,230,0.92) 100%);
+  border: none;
+  border-radius: 6px;
+  text-align: left;
+  font-family: 'Switzer', sans-serif;
+  font-weight: 600;
+}
+
+.episode:hover {
+  cursor: pointer;
+}
+
+iframe {
+  max-height: 170px;
+  max-width: 100%;
+}

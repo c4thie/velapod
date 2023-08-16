@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://open.spotify.com/embed-podcast/iframe-api/v1 https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js 'unsafe-inline' 'unsafe-eval'; object-src 'self'">
+    <title>Spotify Podcast Extension</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link href="https://api.fontshare.com/v2/css?f[]=switzer@600,800,700,400,300,500&display=swap" rel="stylesheet">
+  </head>
+
+  <body>
+    <!-- Display the authorization link -->
+    <a id="auth-link" href="#"></a>
+    <div class="podcast-container">
+      <div class="podcast-selection">
+        <!-- Display all shows -->
+        <div class="allshows">
+          <h3>All Shows</h3>
+        </div>
+        <!-- Display subscribed shows -->
+        <div class="myshows">
+          <h3>My Subscribed Shows</h3>
+          <div class="myshows-container"></div>
+        </div>
+
+        <!-- Display active show's episodes -->
+        <div class="episodes">
+          <h3>Episodes</h3>
+          <div class="episodes-container"></div>
+        </div>
+      </div>
+
+      <!-- Player -->
+      <div id="embed-iframe"></div>
+    </div>
+
+    <script
+      src="https://open.spotify.com/embed-podcast/iframe-api/v1"
+      async
+    ></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
