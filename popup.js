@@ -20,21 +20,21 @@ window.onSpotifyIframeApiReady = (IFrameAPI) => {
   IFrameAPIInstance.createController(element, options, callback);
 };
 
-function playEpisode(episodeUri) {
-  // Ensure that the IFrameAPI is ready
-  if (IFrameAPIInstance && IFrameAPIInstance.createController) {
-    const element = document.getElementById("embed-iframe");
-    const options = {
-      uri: episodeUri,
-    };
+// function playEpisode(episodeUri) {
+//   // Ensure that the IFrameAPI is ready
+//   if (IFrameAPIInstance && IFrameAPIInstance.createController) {
+//     const element = document.getElementById("embed-iframe");
+//     const options = {
+//       uri: episodeUri,
+//     };
 
-    IFrameAPIInstance.createController(element, options, (EmbedController) => {
-      EmbedController.loadUri(episodeUri);
-    });
-  } else {
-    console.log("IFrameAPI is not ready yet.");
-  }
-}
+//     IFrameAPIInstance.createController(element, options, (EmbedController) => {
+//       EmbedController.loadUri(episodeUri);
+//     });
+//   } else {
+//     console.log("IFrameAPI is not ready yet.");
+//   }
+// }
 
 // Authorization tokens to access API
 const client_secret = "64caa2f4522e4d13ad19daa9b61f7c2a";
@@ -89,29 +89,40 @@ const userLanguage = chrome.i18n.getUILanguage();
 const userCountry = userLanguage.substr(-2);
 
 // Function to create show buttons and add click listeners
-function createShowButtons(showsList, accessToken) {
-  const showsContainer = document.querySelector(".myshows-container");
-  // const showsList = shows.items;
-  // console.log("showslist", showsList);
+function createShowButtons(showsList, accessToken, type) {
+  var showsContainer = document.querySelector(".myshows-container");
+  console.log("myshowslist", showsList);
+  if (type === "REC_SHOWS") {
+    showsContainer = document.querySelector(".recshows-container");
+    console.log("allshowslist", showsList);
+  }
   showsList.forEach((showobj) => {
     // Create new HTML elements for each show
     const button = document.createElement("button");
     const image = document.createElement("img");
     const detailsContainer = document.createElement("div");
-
-    // Image source and alt
-    image.src = showobj.show.images[0].url;
-    image.alt = showobj.show.name;
+    const paragraph = document.createElement("p");
+    var showId = undefined;
 
     // Add button CSS class and text
     button.classList.add("show");
     detailsContainer.classList.add("shows-details-container");
 
-    // Create a paragraph element
-    const paragraph = document.createElement("p");
-    paragraph.textContent = showobj.show.name;
+    // Image source and alt
+    if (type === "MY_SHOWS") {
+      showId = showobj.show.id;
+      image.src = showobj.show.images[0].url;
+      image.alt = showobj.show.name;
+      paragraph.textContent = showobj.show.name;
+    } else if (type === "REC_SHOWS") {
+      showId = showobj.id;
+      image.src = showobj.images[0].url;
+      image.alt = showobj.name;
+      paragraph.textContent = showobj.name;
+    }
+
     button.addEventListener("click", async () => {
-      const episodes = await fetchEpisodes(showobj.show.id, accessToken);
+      const episodes = await fetchEpisodes(showId, accessToken);
       createEpisodeButtons(episodes);
     });
     showsContainer.appendChild(button);
@@ -151,6 +162,12 @@ function createEpisodeButtons(episodes) {
 async function initializePopup() {
   const authLink = document.getElementById("auth-link");
   const podcastContainer = document.querySelector(".podcast-container");
+  const shuffle = document.querySelector(".material-symbols-outlined");
+
+  // Refresh recommended shows on shuffle click
+  shuffle.addEventListener("click", async () => {
+    const shows = await fetchAllShows(accessToken);
+  });
 
   // Get the access token and its expiration timestamp from local storage
   const storageData = await new Promise((resolve) => {
@@ -171,12 +188,12 @@ async function initializePopup() {
     // Fetch and initialize subscribed shows
     const myShowsData = await fetchSubscribedShows(accessToken);
     console.log("myShowsData", myShowsData);
-    createShowButtons(myShowsData, accessToken);
+    createShowButtons(myShowsData, accessToken, "MY_SHOWS");
 
     // Fetch all shows
     const allShowsData = await fetchAllShows(accessToken);
     console.log("allShowsData", allShowsData);
-    createShowButtons(allShowsData, accessToken);
+    createShowButtons(allShowsData, accessToken, "REC_SHOWS");
   } else {
     // Token is expired or not available, show the authorization link
     console.log("token invalid");

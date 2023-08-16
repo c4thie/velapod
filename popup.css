@@ -40,16 +40,26 @@ body {
 }
 
 .myshows,
-.episodes {
+.episodes,
+.allshows {
   display: block;
 }
 
-.myshows p {
+.myshows p,
+.allshows p {
   width: 110px;
   align-self: center;
 }
 
-.myshows-container {
+.allshows-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-right: 9px;
+}
+
+.myshows-container,
+.recshows-container {
   display: grid; /* Use grid layout for better alignment */
   grid-template-columns: repeat(3, 1fr); /* Three equal columns */
   gap: 2px;
@@ -77,6 +87,10 @@ body {
   height: 42px;
 }
 
+.show {
+  width: 190px;
+}
+
 .episodes-details-container {
   display: flex;
   max-height: 50px;
@@ -85,10 +99,6 @@ body {
   align-items: center;
 
   padding: 2px 7px;
-}
-
-.show {
-  width: 190px;
 }
 
 .episode {
@@ -124,4 +134,22 @@ body {
 iframe {
   max-height: 170px;
   max-width: 100%;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 600, "GRAD" 0, "opsz" 48;
+  color: #afafaf;
+
+  margin-bottom: 0.5em;
+  margin-block-start: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  transform: scale(1);
+  transition: transform 0.35s ease-in-out, color 0.35s ease-in-out;
+}
+
+.material-symbols-outlined:hover {
+  cursor: pointer;
+  color: #f4f4f4;
+  transform: scale(1.1);
 }

@@ -3,15 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <meta
+      http-equiv="Content-Security-Policy"
+      content=" script-src 'self'
+    https://open.spotify.com/embed-podcast/iframe-api/v1
+    https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js
+    https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js
+    'unsafe-inline' 'unsafe-eval'"
+    /> -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="script-src 'self' https://open.spotify.com/embed-podcast/iframe-api/v1 https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js 'unsafe-inline' 'unsafe-eval'; object-src 'self'"
+      content="child-src https://open.spotify.com/"
     />
     <title>Spotify Podcast Extension</title>
     <link rel="stylesheet" href="popup.css" />
     <link
       href="https://api.fontshare.com/v2/css?f[]=switzer@600,800,700,400,300,500&display=swap"
       rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
   </head>
 
@@ -22,7 +34,11 @@
       <div class="podcast-selection">
         <!-- Display all shows -->
         <div class="allshows">
-          <h3>All Shows</h3>
+          <div class="allshows-header">
+            <h3>Recommended Shows</h3>
+            <span class="material-symbols-outlined"> shuffle </span>
+          </div>
+          <div class="recshows-container"></div>
         </div>
         <!-- Display subscribed shows -->
         <div class="myshows">
@@ -42,6 +58,7 @@
     </div>
 
     <script
+      allow="encrypted-media"
       src="https://open.spotify.com/embed-podcast/iframe-api/v1"
       async
     ></script>
