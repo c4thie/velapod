@@ -1,3 +1,4 @@
+import { fetchAllShows, fetchEpisodes, fetchSubscribedShows } from "./api.js";
 // Define a global variable for IFrameAPI
 let IFrameAPIInstance;
 
@@ -11,7 +12,7 @@ window.onSpotifyIframeApiReady = (IFrameAPI) => {
   const callback = (EmbedController) => {
     document.querySelectorAll(".episode").forEach((episode) => {
       episode.addEventListener("click", () => {
-        console.log("ep clicked iframe")
+        console.log("ep clicked iframe");
         EmbedController.loadUri(episode.dataset.spotifyId);
       });
     });
@@ -39,6 +40,7 @@ function playEpisode(episodeUri) {
 const client_secret = "64caa2f4522e4d13ad19daa9b61f7c2a";
 var client_id = "ee8e41e49dfb47b29f9e6d19e316e753";
 const redirectUri = chrome.runtime.getURL("popup.html");
+console.log(redirectUri);
 const scope = "user-library-read";
 var accessToken = undefined;
 
@@ -61,29 +63,20 @@ async function exchangeAuthorizationCode(authorizationCode) {
   const response = await fetch(tokenUrl, {
     method: "POST",
     headers: {
-      'Authorization': 'Basic ' + btoa(`${client_id}:${client_secret}`),
+      Authorization: "Basic " + btoa(`${client_id}:${client_secret}`),
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: tokenRequestBody.toString(),
   });
 
   if (!response.ok) {
-    return "Error";
     console.error(response.message);
-    console.log("authorization failed");
+    return null;
   }
 
   const tokenResponse = await response.json();
   return tokenResponse;
 }
-
-// Spotify API base URL
-const spotifyAPIBase = "https://api.spotify.com/v1";
-
-// // Retrieve the stored access token
-// chrome.storage.local.get(["accessToken"], async function (result) {
-//   accessToken = result.accessToken;
-// });
 
 // Get the user's language setting
 const userLanguage = chrome.i18n.getUILanguage();
@@ -95,67 +88,11 @@ const userLanguage = chrome.i18n.getUILanguage();
 // Use the user's language to get the corresponding country (for most cases)
 const userCountry = userLanguage.substr(-2);
 
-async function fetchAllShows() {
-  const response = await fetch(`${spotifyAPIBase}/shows`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-
-    },
-  });
-
-  if (!response.ok) {
-    console.error("Error fetching all shows:", response.statusText);
-    console.error(response);
-    return "error";
-  }
-
-  const allShowData = await response.json();
-  console.log(allShowData);
-  return allShowData;
-}
-
-async function fetchSubscribedShows() {
-  const response = await fetch(`${spotifyAPIBase}/me/shows`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    console.error("Error fetching subscribed shows:", response.statusText);
-    console.error(response);
-    console.log(response);
-    return "error";
-  }
-
-  const showData = await response.json();
-  console.log(showData);
-  return showData;
-}
-
-
-// // // Fetch episodes for a show
-async function fetchEpisodes(showId) {
-  const response = await fetch(`${spotifyAPIBase}/shows/${showId}/episodes`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    console.error("Error fetching episodes:", response.statusText);
-    return null; // Handle the error case appropriately
-  }
-
-  const epData = await response.json();
-  return epData;
-}
-
-
 // Function to create show buttons and add click listeners
-function createShowButtons(shows) {
+function createShowButtons(showsList, accessToken) {
   const showsContainer = document.querySelector(".myshows-container");
-  const showsList = shows.items;
+  // const showsList = shows.items;
+  // console.log("showslist", showsList);
   showsList.forEach((showobj) => {
     // Create new HTML elements for each show
     const button = document.createElement("button");
@@ -174,7 +111,7 @@ function createShowButtons(shows) {
     const paragraph = document.createElement("p");
     paragraph.textContent = showobj.show.name;
     button.addEventListener("click", async () => {
-      const episodes = await fetchEpisodes(showobj.show.id);
+      const episodes = await fetchEpisodes(showobj.show.id, accessToken);
       createEpisodeButtons(episodes);
     });
     showsContainer.appendChild(button);
@@ -210,139 +147,88 @@ function createEpisodeButtons(episodes) {
   });
 }
 
-// Main function to initialize the popup when user does not need a new token
-async function initializePopupValidToken() {
-  console.log("initializing no new token");
+// Main function to initialize the popup
+async function initializePopup() {
   const authLink = document.getElementById("auth-link");
   const podcastContainer = document.querySelector(".podcast-container");
 
-  chrome.storage.local.get(["accessToken"], function (result) {
-    accessToken = result.accessToken;
-    console.log("old auth, access token from storage", accessToken);
-    // Hide the authorization link
+  // Get the access token and its expiration timestamp from local storage
+  const storageData = await new Promise((resolve) => {
+    chrome.storage.local.get(["accessToken", "tokenExpiration"], (result) =>
+      resolve(result)
+    );
+  });
+
+  const accessToken = storageData.accessToken;
+  const tokenExpiration = storageData.tokenExpiration;
+
+  if (accessToken && tokenExpiration && Date.now() < tokenExpiration) {
+    console.log("valid token");
+    // Token is valid, proceed with fetching and rendering data
     authLink.style.display = "none";
-    // Show the shows container
     podcastContainer.style.display = "block";
-  });
 
-  // Fetch and initialize subscribed shows
-  const myShowsData = await fetchSubscribedShows();
-  console.log("myShowsData", myShowsData);
-  createShowButtons(myShowsData);
+    // Fetch and initialize subscribed shows
+    const myShowsData = await fetchSubscribedShows(accessToken);
+    console.log("myShowsData", myShowsData);
+    createShowButtons(myShowsData, accessToken);
 
-  // Fetch all shows
-  const allShowsData = await fetchAllShows();
-  console.log("myShowsData", allShowsData);
-  createShowButtons(allShowsData);
-}
+    // Fetch all shows
+    const allShowsData = await fetchAllShows(accessToken);
+    console.log("allShowsData", allShowsData);
+    createShowButtons(allShowsData, accessToken);
+  } else {
+    // Token is expired or not available, show the authorization link
+    console.log("token invalid");
+    authLink.style.display = "block";
+    podcastContainer.style.display = "none";
+    authLink.href = authUrl;
+    authLink.textContent = "Authorize with Spotify";
 
-// Main function to initialize the popup when user needs a new token
-async function initializePopupInvalidToken() {
-  console.log("initializing new token");
-  const authLink = document.getElementById("auth-link");
-  const podcastContainer = document.querySelector(".podcast-container");
+    // Click event listener to the link
+    authLink.addEventListener("click", async (event) => {
+      event.preventDefault();
+      window.location.href = authUrl;
 
-  // Show the authorization link
-  authLink.style.display = "block";
-  // Hide the shows container
-  podcastContainer.style.display = "none";
-  // Set the and text content of the authorization link
-  authLink.href = authUrl;
-  authLink.textContent = "Authorize with Spotify";
+      const authorizationCode = new URLSearchParams(window.location.search).get(
+        "code"
+      );
 
-  // Click event listener to the link
-  authLink.addEventListener("click", async function (event) {
-    // Prevent the default behavior of following the link
-    event.preventDefault();
-    // Open the auth url
-    window.location.href = authUrl;
+      if (authorizationCode) {
+        console.log("auth obtained, waiting for token validation");
+        const tokenResponse = await exchangeAuthorizationCode(
+          authorizationCode
+        );
 
-    const authorizationCode = new URLSearchParams(window.location.search).get("code");
+        if (!tokenResponse) {
+          console.log("token exchange failed");
+          // Token exchange failed, show the authorization link again
+          authLink.style.display = "block";
+          podcastContainer.style.display = "none";
+        } else if (tokenResponse.access_token) {
+          const expirationTimestamp =
+            Date.now() + tokenResponse.expires_in * 1000;
 
-    if (authorizationCode) {
-      console.log("Authorization code received:", authorizationCode);
-      const tokenResponse = await exchangeAuthorizationCode(authorizationCode);
-      console.log("Token response:", tokenResponse);
-  
-      if (tokenResponse && tokenResponse.access_token) {
-        const expirationTimestamp = Date.now() + (tokenResponse.expires_in * 1000);
-        console.log("token expires in", tokenResponse.expires_in);
-        console.log("expiration timestamp:", expirationTimestamp);
-  
-        // Store the access token and its expiration timestamp in the extension's storage
-        chrome.storage.local.set(
-          { accessToken: tokenResponse.access_token, tokenExpiration: expirationTimestamp },
-          function () {
-            console.log("Access token stored.");
-            accessToken = tokenResponse.access_token;
-          });
+          // Store the access token and its expiration timestamp in the extension's storage
+          chrome.storage.local.set(
+            {
+              accessToken: tokenResponse.access_token,
+              tokenExpiration: expirationTimestamp,
+            },
+            function () {
+              console.log("Access token stored.");
+              // Initialize popup after storing the token
+              initializePopup();
+            }
+          );
+        }
       }
-    } else {
-      // Use chrome.storage to get the access token from background.js
-      chrome.storage.local.get(["accessToken"], function (result) {
-        accessToken = result.accessToken;
-        console.log("new auth, access token from storage", accessToken);
-        // Hide the authorization link
-        authLink.style.display = "none";
-        // Show the shows container
-        podcastContainer.style.display = "block";
-      });
-    }
-  });
-
-  // Fetch and initialize subscribed shows
-  const myShowsData = await fetchSubscribedShows();
-  console.log("myShowsData", myShowsData);
-  createShowButtons(myShowsData);
-
-  // Fetch all shows
-  const allShowsData = await fetchAllShows();
-  console.log("myShowsData", allShowsData);
-  createShowButtons(allShowsData);
+    });
+  }
 }
 
 // Initialize the popup when the DOM is ready
 document.addEventListener("DOMContentLoaded", async function () {
   console.log("page loaded");
-
-  const authorizationCode = new URLSearchParams(window.location.search).get("code");
-
-  if (authorizationCode) { // user got a new auth code
-    console.log("Authorization code received:", authorizationCode);
-    const tokenResponse = await exchangeAuthorizationCode(authorizationCode);
-    console.log("Token response:", tokenResponse);
-
-    if (tokenResponse === "Error") {
-      // Token exchange failed, get a new token
-      initializePopupInvalidToken();
-
-    } else if (tokenResponse && tokenResponse.access_token) {
-      const expirationTimestamp = Date.now() + (tokenResponse.expires_in * 1000);
-      console.log("Expiration timestamp:", expirationTimestamp);
-
-      // Store the access token and its expiration timestamp in the extension's storage
-      chrome.storage.local.set(
-        { accessToken: tokenResponse.access_token, tokenExpiration: expirationTimestamp },
-        function () {
-          accessToken = tokenResponse.access_token;
-          console.log("Access token stored.");
-          initializePopupValidToken();
-        }
-      );
-    }
-  } else { // upon launch user already has a token
-    // Use chrome.storage to get the access token and its expiration timestamp
-    chrome.storage.local.get(["accessToken", "tokenExpiration"], async function (result) {
-      const accessToken = result.accessToken;
-      const tokenExpiration = result.tokenExpiration;
-      console.log("Accesstoken + tokenExpiration", accessToken, tokenExpiration);
-
-      const tokenResponse = await exchangeAuthorizationCode(authorizationCode);
-      console.log("Token response:", tokenResponse);
-
-      if (tokenResponse === "Error") {
-        initializePopupInvalidToken();
-      } else {
-        initializePopupValidToken();
-      }})
-  }});
+  initializePopup();
+});

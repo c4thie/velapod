@@ -14,66 +14,35 @@ chrome.runtime.onInstalled.addListener(function () {
   });
 });
 
-// chrome.runtime.onInstalled.addListener(function () {
-//   // Make extension work on all pages
-//   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
-//     chrome.declarativeContent.onPageChanged.addRules([
-//       {
-//         conditions: [new chrome.declarativeContent.PageStateMatcher({})],
-//         actions: [new chrome.declarativeContent.ShowPageAction()],
-//       },
-//     ]);
-//   });
-// });
+// Authorization tokens to access API
+const client_secret = "64caa2f4522e4d13ad19daa9b61f7c2a";
+var client_id = "ee8e41e49dfb47b29f9e6d19e316e753";
+const redirectUri = chrome.runtime.getURL("popup.html");
+const scope = "user-library-read";
+var accessToken = undefined;
 
-// // Function to exchange authorization code for access token
-// async function exchangeAuthorizationCode(authorizationCode) {
-//   const tokenUrl = "https://accounts.spotify.com/api/token";
-//   const tokenRequestBody = new URLSearchParams({
-//     grant_type: "authorization_code",
-//     code: authorizationCode,
-//     redirect_uri: redirectUri,
-//     client_id: client_id,
-//     client_secret: client_secret,
-//   });
+// Construct the authorization URL
+const authUrl = `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(
+  redirectUri
+)}&scope=${encodeURIComponent(scope)}&response_type=code`;
 
-//   const response = await fetch(tokenUrl, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/x-www-form-urlencoded",
-//     },
-//     body: tokenRequestBody.toString(),
-//   });
+const authLink = document.getElementById("auth-link");
 
-//   const tokenResponse = await response.json();
-//   return tokenResponse;
-// }
+// Handle the authorization link click event
+authLink.addEventListener("click", async function (event) {
+  // Prevent the default behavior of following the link
+  event.preventDefault();
+  // Open the auth url
+  window.location.href = authUrl;
 
-// // Function to send a message to popup script
-// function sendMessageToPopup(action, data) {
-//   chrome.runtime.sendMessage(chrome.runtime.id, { action, ...data });
-// }
+  const authorizationCode = new URLSearchParams(window.location.search).get(
+    "code"
+  );
 
-// // Handle the authorization code when received
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-//   if (request.action === "handleAuthorizationCode") {
-//     const authorizationCode = request.authorizationCode;
-//     if (authorizationCode) {
-//       exchangeAuthorizationCode(authorizationCode).then((tokenResponse) => {
-//         if (tokenResponse.access_token) {
-//           // Store the access token in the extension's storage
-//           chrome.storage.local.set(
-//             { accessToken: tokenResponse.access_token },
-//             function () {
-//               console.log("Access token stored.");
-//             }
-//           );
-//           // Notify the popup that the access token has been set
-//           sendMessageToPopup("setAccessToken", {
-//             accessToken: tokenResponse.access_token,
-//           });
-//         }
-//       });
-//     }
-//   }
-// });
+  // After the redirection, send a message to the popup script
+  chrome.runtime.sendMessage({
+    type: "authorizationRedirect",
+    authorizationCode: authorizationCode,
+    redirectedUrl: window.location.href,
+  });
+});

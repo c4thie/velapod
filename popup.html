@@ -3,10 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://open.spotify.com/embed-podcast/iframe-api/v1 https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js 'unsafe-inline' 'unsafe-eval'; object-src 'self'">
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="script-src 'self' https://open.spotify.com/embed-podcast/iframe-api/v1 https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js 'unsafe-inline' 'unsafe-eval'; object-src 'self'"
+    />
     <title>Spotify Podcast Extension</title>
     <link rel="stylesheet" href="popup.css" />
-    <link href="https://api.fontshare.com/v2/css?f[]=switzer@600,800,700,400,300,500&display=swap" rel="stylesheet">
+    <link
+      href="https://api.fontshare.com/v2/css?f[]=switzer@600,800,700,400,300,500&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
@@ -39,6 +45,6 @@
       src="https://open.spotify.com/embed-podcast/iframe-api/v1"
       async
     ></script>
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
   </body>
 </html>
