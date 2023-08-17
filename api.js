@@ -51,3 +51,59 @@ export async function fetchEpisodes(showId, accessToken) {
   const epData = await response.json();
   return epData;
 }
+
+// Subscribe to a show
+export async function subscribeToShow(showId, accessToken) {
+  try {
+    const response = await fetch(`${spotifyAPIBase}/me/shows`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ids: [showId],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Error subscribing to show:", response.statusText);
+      console.error(response);
+      return false;
+    }
+
+    console.log("Subscribed to show successfully.");
+    return true;
+  } catch (error) {
+    console.error("Error subscribing to show:", error);
+    return false;
+  }
+}
+
+// Unsubscribe from a show
+export async function unsubscribeFromShow(showId, accessToken) {
+  try {
+    const response = await fetch(`${spotifyAPIBase}/me/shows`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ids: [showId],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Error unsubscribing from show:", response.statusText);
+      console.error(response);
+      return false;
+    }
+
+    console.log("Unsubscribed from show successfully.");
+    return true;
+  } catch (error) {
+    console.error("Error unsubscribing from show:", error);
+    return false;
+  }
+}

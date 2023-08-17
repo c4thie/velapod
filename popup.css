@@ -70,20 +70,24 @@ body {
 }
 
 .podcast-container {
-  height: 152px;
+  position: fixed;
+  display: flex;
+  width: 597px;
+  height: 195px;
+  top: 0;
   background-color: rgb(27, 27, 27);
 }
 
 .iframe-container {
   position: fixed; /* Position it fixed on the viewport */
   top: 20px; /* Stick it to the top */
-  width: 100%; /* Occupy the full width */
+  width: fit-content;
   z-index: 9999; /* Set a high z-index to keep it on top */
   max-height: 180px;
 }
 
 iframe {
-  width: 597px;
+  width: 545px;
   height: 152px;
   border: none;
   border-radius: 12px;
@@ -101,6 +105,7 @@ iframe {
   display: flex;
   flex-direction: column;
   width: 100%;
+  margin-top: 150px;
 }
 
 .podcast-selection h2 {
@@ -123,7 +128,14 @@ iframe {
   align-self: center;
 }
 
-.podcast-selection-header,
+.podcast-selection-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  justify-content: flex-start;
+}
+
 .allshows-header {
   display: flex;
   flex-direction: row;
@@ -162,6 +174,22 @@ iframe {
 .show {
   width: 190px;
   padding: 2px;
+}
+
+.show:hover {
+  background: rgb(2, 158, 56);
+}
+
+/* Styles for the smaller buttons */
+.show .episode-button,
+.show .remove-button {
+  display: none;
+}
+
+/* Styles for the episode and remove buttons when shown */
+.show:hover .episode-button,
+.show:hover .remove-button {
+  display: inline-block;
 }
 
 .episode {
@@ -225,8 +253,17 @@ iframe {
   display: none;
 }
 
+.toggle-container {
+  position: fixed;
+  top: 20px;
+  right: 18px;
+  width: fit-content;
+  z-index: 9999;
+}
+
 .material-symbols-outlined.expand,
 .material-symbols-outlined.collapse {
+  margin: 15px 9px 0px 0;
   transform: scale(1.2);
 }
 

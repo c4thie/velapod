@@ -2,95 +2,92 @@ import {
   fetchRandomRecommendedShows,
   fetchEpisodes,
   fetchSubscribedShows,
+  unsubscribeFromShow,
+  subscribeToShow,
 } from "./api.js";
-// Define a global variable for IFrameAPI
-let IFrameAPIInstance;
 
-// window.onSpotifyIframeApiReady = () => {
-//   // IFrameAPIInstance = IFrameAPI;
-
-//   const iframe = document.getElementById("embed-iframe");
-//   // const options = {
-//   //   uri: "spotify:episode:7makk4oTQel546B0PZlDM5",
-//   // };
-//   const callback = () => {
-//     document.querySelectorAll(".episode").forEach((episode) => {
-//       episode.addEventListener("click", () => {
-//         console.log("ep clicked iframe");
-//         iframe.src = episode.dataset.spotifyId;
-//       });
-//     });
-//   };
-//   // IFrameAPIInstance.createController(element, options, callback);
-// };
-
-// function playEpisode(episodeUri) {
-//   // Ensure that the IFrameAPI is ready
-//   if (IFrameAPIInstance && IFrameAPIInstance.createController) {
-//     const element = document.getElementById("embed-iframe");
-//     const options = {
-//       uri: episodeUri,
-//     };
-
-//     IFrameAPIInstance.createController(element, options, (EmbedController) => {
-//       EmbedController.loadUri(episodeUri);
-//     });
-//   } else {
-//     console.log("IFrameAPI is not ready yet.");
-//   }
-// }
-
-// Authorization tokens to access API
-const client_secret = "64caa2f4522e4d13ad19daa9b61f7c2a";
-var client_id = "ee8e41e49dfb47b29f9e6d19e316e753";
-const redirectUri = chrome.runtime.getURL("popup.html");
-console.log(redirectUri);
-const scope = "user-library-read";
-var accessToken = undefined;
-
-// Construct the authorization URL
-const authUrl = `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(
-  redirectUri
-)}&scope=${encodeURIComponent(scope)}&response_type=code`;
-
-// Function to exchange authorization code for access token
-async function exchangeAuthorizationCode(authorizationCode) {
-  const tokenUrl = "https://accounts.spotify.com/api/token";
-  const tokenRequestBody = new URLSearchParams({
-    grant_type: "authorization_code",
-    code: authorizationCode,
-    redirect_uri: redirectUri,
-    client_id: client_id,
-    client_secret: client_secret,
-  });
-
-  const response = await fetch(tokenUrl, {
-    method: "POST",
-    headers: {
-      Authorization: "Basic " + btoa(`${client_id}:${client_secret}`),
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: tokenRequestBody.toString(),
-  });
-
-  if (!response.ok) {
-    console.error(response.message);
-    return null;
-  }
-
-  const tokenResponse = await response.json();
-  return tokenResponse;
-}
+import { exchangeAuthorizationCode } from "./oauth.js";
 
 // Get the user's language setting
 const userLanguage = chrome.i18n.getUILanguage();
 
-// // Example of using localized messages
-// const welcomeMessage = chrome.i18n.getMessage("welcomeMessage");
-// console.log(welcomeMessage);
+// Example of using localized messages
+const welcomeMessage = chrome.i18n.getMessage("welcomeMessage");
+console.log(welcomeMessage);
 
 // Use the user's language to get the corresponding country (for most cases)
 const userCountry = userLanguage.substr(-2);
+
+// Function to create show buttons and add click listeners
+function createMyShowButtons(showsList, accessToken, type) {
+  var showsContainer = document.querySelector(".myshows-container");
+  showsContainer.innerHTML = "";
+
+  showsList.forEach((showobj) => {
+    // Create new HTML elements for each show
+    const button = document.createElement("button");
+    const image = document.createElement("img");
+    const detailsContainer = document.createElement("div");
+    const paragraph = document.createElement("p");
+    const description = document.createElement("p");
+    var showId = undefined;
+
+    // Add button CSS class and text
+    button.classList.add("show");
+    detailsContainer.classList.add("shows-details-container");
+
+    // Image source and alt
+    showId = showobj.show.id;
+    image.src = showobj.show.images[0].url;
+    image.alt = showobj.show.name;
+    paragraph.textContent = showobj.show.name;
+
+    // Add event listeners for hover and click
+    button.addEventListener("mouseover", () => {
+      button.classList.add("hovered");
+      image.style.display = "none"; // Hide the image
+      paragraph.style.display = "none"; // Hide the paragraph
+    });
+
+    button.addEventListener("mouseout", () => {
+      button.classList.remove("hovered");
+      image.style.display = "block";
+      paragraph.style.display = "block";
+    });
+
+    // Create and append episode and remove buttons
+    const episodeButton = document.createElement("button");
+    const removeButton = document.createElement("button");
+    const error = document.createElement("span");
+
+    episodeButton.classList.add("episode-button");
+    episodeButton.textContent = "Episodes";
+
+    episodeButton.addEventListener("click", async () => {
+      const episodes = await fetchEpisodes(showId, accessToken);
+      createEpisodeButtons(episodes);
+    });
+
+    removeButton.classList.add("remove-button");
+    removeButton.textContent = "Remove";
+
+    removeButton.addEventListener("click", async () => {
+      const success = await unsubscribeFromShow(showId, accessToken);
+      if (!success) {
+        error.textContent = "Error unsubscribing from show";
+        button.appendChild(error);
+      }
+    });
+
+    button.appendChild(episodeButton);
+    button.appendChild(removeButton);
+
+    showsContainer.appendChild(button);
+    button.appendChild(detailsContainer);
+    detailsContainer.appendChild(paragraph);
+    detailsContainer.appendChild(image);
+  });
+}
 
 // Function to create show buttons and add click listeners
 function createShowButtons(showsList, accessToken, type) {
@@ -186,6 +183,7 @@ function createEpisodeButtons(episodes) {
 
 // Main function to initialize the popup
 async function initializePopup() {
+  const body = document.querySelector("body");
   const authLink = document.getElementById("auth-link");
   const auth = document.querySelector(".non-authorized");
   const mainContainer = document.querySelector(".main-container");
@@ -193,6 +191,8 @@ async function initializePopup() {
   const shuffle = document.querySelector(".shuffle");
   const collapse = document.querySelector(".collapse");
   const expand = document.querySelector(".expand");
+
+  // initially hide expand icon
   expand.style.display = "none";
 
   // Get the access token and its expiration timestamp from local storage
@@ -213,6 +213,7 @@ async function initializePopup() {
 
   // Open accordion when expand is clicked
   expand.addEventListener("click", async () => {
+    body.style.height = "550px";
     browser.style.display = "block";
     collapse.style.display = "block";
     expand.style.display = "none";
@@ -220,6 +221,7 @@ async function initializePopup() {
 
   // When collapse is clicked, close accordion
   collapse.addEventListener("click", async () => {
+    body.style.height = "157px";
     browser.style.display = "none";
     collapse.style.display = "none";
     expand.style.display = "block";
@@ -234,7 +236,7 @@ async function initializePopup() {
     // Fetch and initialize subscribed shows
     const myShowsData = await fetchSubscribedShows(accessToken);
     console.log("myShowsData", myShowsData);
-    createShowButtons(myShowsData, accessToken, "MY_SHOWS");
+    createMyShowButtons(myShowsData, accessToken, "MY_SHOWS");
 
     // Fetch recommended shows
     const recShowsData = await fetchRandomRecommendedShows();
