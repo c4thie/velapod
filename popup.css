@@ -89,9 +89,9 @@ iframe {
   border-radius: 12px;
 }
 
-.podcast-selection h3 {
+.podcast-selection h3,
+.podcast-selection h2 {
   color: white;
-  font-size: 24px;
   letter-spacing: 0.3px;
   margin-bottom: 0.5em;
   width: 100vw;
@@ -101,6 +101,14 @@ iframe {
   display: flex;
   flex-direction: column;
   width: 100%;
+}
+
+.podcast-selection h2 {
+  font-size: 32px;
+}
+
+.podcast-selection h3 {
+  font-size: 22px;
 }
 
 .myshows,
@@ -115,6 +123,7 @@ iframe {
   align-self: center;
 }
 
+.podcast-selection-header,
 .allshows-header {
   display: flex;
   flex-direction: row;
@@ -214,6 +223,14 @@ iframe {
 
 .hidden {
   display: none;
+}
+
+.material-symbols-outlined.expand {
+  transform: scale(1.2);
+}
+
+.material-symbols-outlined.expand:hover {
+  transform: scale(1.3);
 }
 
 .material-symbols-outlined {
