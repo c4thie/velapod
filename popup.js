@@ -189,7 +189,11 @@ async function initializePopup() {
   const authLink = document.getElementById("auth-link");
   const auth = document.querySelector(".non-authorized");
   const mainContainer = document.querySelector(".main-container");
-  const shuffle = document.querySelector(".material-symbols-outlined");
+  const browser = document.querySelector(".podcast-selection-body");
+  const shuffle = document.querySelector(".shuffle");
+  const collapse = document.querySelector(".collapse");
+  const expand = document.querySelector(".expand");
+  expand.style.display = "none";
 
   // Get the access token and its expiration timestamp from local storage
   const storageData = await new Promise((resolve) => {
@@ -205,6 +209,20 @@ async function initializePopup() {
   shuffle.addEventListener("click", async () => {
     const shows = await fetchRandomRecommendedShows();
     createShowButtons(shows, accessToken, "REC_SHOWS");
+  });
+
+  // Open accordion when expand is clicked
+  expand.addEventListener("click", async () => {
+    browser.style.display = "block";
+    collapse.style.display = "block";
+    expand.style.display = "none";
+  });
+
+  // When collapse is clicked, close accordion
+  collapse.addEventListener("click", async () => {
+    browser.style.display = "none";
+    collapse.style.display = "none";
+    expand.style.display = "block";
   });
 
   if (accessToken && tokenExpiration && Date.now() < tokenExpiration) {

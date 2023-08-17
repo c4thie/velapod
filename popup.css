@@ -225,11 +225,13 @@ iframe {
   display: none;
 }
 
-.material-symbols-outlined.expand {
+.material-symbols-outlined.expand,
+.material-symbols-outlined.collapse {
   transform: scale(1.2);
 }
 
-.material-symbols-outlined.expand:hover {
+.material-symbols-outlined.expand:hover,
+.material-symbols-outlined.collapse:hover {
   transform: scale(1.3);
 }
 

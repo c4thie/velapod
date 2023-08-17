@@ -17,10 +17,6 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    />
   </head>
 
   <body>
@@ -56,25 +52,30 @@
         <!-- Display all shows -->
         <div class="podcast-selection-header">
           <h2>Browse</h2>
-          <span class="material-symbols-outlined expand"> expand_less </span>
+          <span class="material-symbols-outlined collapse"> expand_less </span>
+          <span class="material-symbols-outlined expand hidden">
+            expand_more
+          </span>
         </div>
-        <div class="allshows">
-          <div class="allshows-header">
-            <h3>Recommended Shows</h3>
-            <span class="material-symbols-outlined"> shuffle </span>
+        <div class="podcast-selection-body">
+          <div class="allshows">
+            <div class="allshows-header">
+              <h3>Recommended Shows</h3>
+              <span class="material-symbols-outlined shuffle"> shuffle </span>
+            </div>
+            <div class="recshows-container"></div>
           </div>
-          <div class="recshows-container"></div>
-        </div>
-        <!-- Display subscribed shows -->
-        <div class="myshows">
-          <h3>My Subscribed Shows</h3>
-          <div class="myshows-container"></div>
-        </div>
+          <!-- Display subscribed shows -->
+          <div class="myshows">
+            <h3>My Subscribed Shows</h3>
+            <div class="myshows-container"></div>
+          </div>
 
-        <!-- Display active show's episodes -->
-        <div class="episodes">
-          <h3>Episodes</h3>
-          <div class="episodes-container"></div>
+          <!-- Display active show's episodes -->
+          <div class="episodes">
+            <h3>Episodes</h3>
+            <div class="episodes-container"></div>
+          </div>
         </div>
       </div>
     </div>
