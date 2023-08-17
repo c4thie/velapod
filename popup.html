@@ -5,16 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- <meta
       http-equiv="Content-Security-Policy"
-      content=" script-src 'self'
-    https://open.spotify.com/embed-podcast/iframe-api/v1
-    https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.054d79f7.js
-    https://open.spotifycdn.com/cdn/build/embed-iframe-api-v1.304a81f9.js
-    'unsafe-inline' 'unsafe-eval'"
-    /> -->
-    <meta
-      http-equiv="Content-Security-Policy"
       content="child-src https://open.spotify.com/"
-    />
+    /> -->
     <title>Spotify Podcast Extension</title>
     <link rel="stylesheet" href="popup.css" />
     <link
@@ -29,8 +21,45 @@
 
   <body>
     <!-- Display the authorization link -->
-    <a id="auth-link" href="#"></a>
-    <div class="podcast-container">
+    <div class="non-authorized">
+      <h2>Welcome to <span>Spot the Pod</span></h2>
+      <p>
+        Spot the Pod is a Podcast recommendation extension and a web player
+        which allows you to listen to your favorite podcasts while you surf the
+        web.
+      </p>
+      <a id="auth-link" href="#"></a>
+    </div>
+    <div class="background"></div>
+    <div class="main-container">
+      <div class="podcast-container">
+        <!-- Player -->
+        <!-- <div id="embed-iframe"></div> -->
+        <!-- <iframe
+        id="embed-iframe"
+        style="border-radius: 12px"
+        src="https://open.spotify.com/embed/episode/0shtaRjws5dJUkoIuZyK21?utm_source=generator&t=0"
+        width="100%"
+        height="152"
+        frameborder="0"
+        allowfullscreen=""
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+        loading="lazy"
+      ></iframe> -->
+        <div class="iframe-container">
+          <iframe
+            id="embed-iframe"
+            style="border-radius: 12px"
+            src="https://open.spotify.com/embed/episode/6Za8hWs40hwFT7KKiPfttR?utm_source=generator&theme=0&t=0"
+            width="100%"
+            height="152"
+            frameborder="0"
+            allowfullscreen=""
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+          ></iframe>
+        </div>
+      </div>
       <div class="podcast-selection">
         <!-- Display all shows -->
         <div class="allshows">
@@ -52,16 +81,13 @@
           <div class="episodes-container"></div>
         </div>
       </div>
-
-      <!-- Player -->
-      <div id="embed-iframe"></div>
     </div>
 
-    <script
+    <!-- <script
       allow="encrypted-media"
       src="https://open.spotify.com/embed-podcast/iframe-api/v1"
       async
-    ></script>
+    ></script> -->
     <script type="module" src="popup.js"></script>
   </body>
 </html>

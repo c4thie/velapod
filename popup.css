@@ -1,31 +1,95 @@
 /* popup.css */
 
 :root {
-  /* background: rgb(7,77,33);
-  background: linear-gradient(0deg, rgba(7,77,33,1) 23%, rgba(100,156,114,1) 92%); */
-  background: rgb(27, 48, 32);
-  background: linear-gradient(
+  background: rgb(27, 27, 27);
+  /* background: rgb(27, 48, 32); */
+  /* background: linear-gradient(
     0deg,
     rgba(27, 48, 32, 1) 25%,
     rgba(7, 77, 33, 1) 90%
-  );
+  ); */
 }
 body {
   display: flex;
   flex-direction: column;
-
+  height: 550px;
   width: 600px;
   padding: 10px;
   font-family: "Switzer", sans-serif;
 }
 
-.podcast-container {
+.non-authorized {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start; /* Align items to the top */
+  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: 10em;
+  height: 100vh;
 }
 
-.podcast-container h3 {
+.non-authorized h2,
+.non-authorized p,
+.non-authorized a {
+  font-family: "Switzer", sans-serif;
+}
+
+.non-authorized h2 {
+  color: white;
+  font-size: 32px;
+  font-weight: 800;
+  text-align: center;
+  padding: 0 2em;
+  width: auto;
+  margin: 0;
+}
+
+.non-authorized span {
+  background: -webkit-linear-gradient(#eee, #00923a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.non-authorized p {
+  color: rgb(165, 165, 165);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.non-authorized a {
+  color: #2cb152;
+  transition: color 0.35s ease-in-out;
+
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+}
+.non-authorized a:hover {
+  cursor: pointer;
+  color: #f4f4f4;
+}
+
+.podcast-container {
+  height: 152px;
+  background-color: rgb(27, 27, 27);
+}
+
+.iframe-container {
+  position: fixed; /* Position it fixed on the viewport */
+  top: 20px; /* Stick it to the top */
+  width: 100%; /* Occupy the full width */
+  z-index: 9999; /* Set a high z-index to keep it on top */
+  max-height: 180px;
+}
+
+iframe {
+  width: 597px;
+  height: 152px;
+  border: none;
+  border-radius: 12px;
+}
+
+.podcast-selection h3 {
   color: white;
   font-size: 24px;
   letter-spacing: 0.3px;
@@ -68,7 +132,6 @@ body {
 .episodes-container {
   display: grid; /* Use grid layout */
   grid-template-columns: repeat(2, 1fr); /* Two equal columns */
-  gap: 2px; /* Gap between items */
 }
 
 .shows-details-container {
@@ -89,27 +152,19 @@ body {
 
 .show {
   width: 190px;
-}
-
-.episodes-details-container {
-  display: flex;
-  max-height: 50px;
-  overflow-x: clip;
-  overflow-y: clip;
-  align-items: center;
-
-  padding: 2px 7px;
+  padding: 2px;
 }
 
 .episode {
-  width: 295px;
+  width: 290px;
+  margin: 3px auto;
+  padding: 10px 2px;
 }
 
 .episode,
 .show {
   margin-bottom: 7px;
   margin-right: 7px;
-  padding: 2px;
   cursor: pointer;
   /* background-color: #f0f0f0; */
   background: rgb(214, 214, 214);
@@ -131,9 +186,34 @@ body {
   cursor: pointer;
 }
 
-iframe {
-  max-height: 170px;
-  max-width: 100%;
+.episode p {
+  width: 100%;
+  margin: auto;
+}
+
+.episodes-details-container {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+
+  height: 50px;
+  overflow: hidden; /* Hide overflow content */
+  text-overflow: ellipsis;
+  align-items: center;
+
+  padding: 2px 7px;
+}
+
+.episodes-details-description {
+  color: rgba(128, 128, 128, 0.9);
+  white-space: nowrap; /* Prevent line breaks within the description */
+  overflow: hidden; /* Hide any overflow content */
+  text-overflow: ellipsis; /* Add ellipsis for overflow content */
+  font-weight: 500;
+}
+
+.hidden {
+  display: none;
 }
 
 .material-symbols-outlined {

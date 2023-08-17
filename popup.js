@@ -1,24 +1,28 @@
-import { fetchAllShows, fetchEpisodes, fetchSubscribedShows } from "./api.js";
+import {
+  fetchRandomRecommendedShows,
+  fetchEpisodes,
+  fetchSubscribedShows,
+} from "./api.js";
 // Define a global variable for IFrameAPI
 let IFrameAPIInstance;
 
-window.onSpotifyIframeApiReady = (IFrameAPI) => {
-  IFrameAPIInstance = IFrameAPI;
+// window.onSpotifyIframeApiReady = () => {
+//   // IFrameAPIInstance = IFrameAPI;
 
-  const element = document.getElementById("embed-iframe");
-  const options = {
-    uri: "spotify:episode:7makk4oTQel546B0PZlDM5",
-  };
-  const callback = (EmbedController) => {
-    document.querySelectorAll(".episode").forEach((episode) => {
-      episode.addEventListener("click", () => {
-        console.log("ep clicked iframe");
-        EmbedController.loadUri(episode.dataset.spotifyId);
-      });
-    });
-  };
-  IFrameAPIInstance.createController(element, options, callback);
-};
+//   const iframe = document.getElementById("embed-iframe");
+//   // const options = {
+//   //   uri: "spotify:episode:7makk4oTQel546B0PZlDM5",
+//   // };
+//   const callback = () => {
+//     document.querySelectorAll(".episode").forEach((episode) => {
+//       episode.addEventListener("click", () => {
+//         console.log("ep clicked iframe");
+//         iframe.src = episode.dataset.spotifyId;
+//       });
+//     });
+//   };
+//   // IFrameAPIInstance.createController(element, options, callback);
+// };
 
 // function playEpisode(episodeUri) {
 //   // Ensure that the IFrameAPI is ready
@@ -94,14 +98,19 @@ function createShowButtons(showsList, accessToken, type) {
   console.log("myshowslist", showsList);
   if (type === "REC_SHOWS") {
     showsContainer = document.querySelector(".recshows-container");
-    console.log("allshowslist", showsList);
+    console.log("recshowslist", showsList);
   }
+
+  // Clear existing child elements of the showsContainer
+  showsContainer.innerHTML = "";
+
   showsList.forEach((showobj) => {
     // Create new HTML elements for each show
     const button = document.createElement("button");
     const image = document.createElement("img");
     const detailsContainer = document.createElement("div");
     const paragraph = document.createElement("p");
+    const description = document.createElement("p");
     var showId = undefined;
 
     // Add button CSS class and text
@@ -115,10 +124,11 @@ function createShowButtons(showsList, accessToken, type) {
       image.alt = showobj.show.name;
       paragraph.textContent = showobj.show.name;
     } else if (type === "REC_SHOWS") {
-      showId = showobj.id;
-      image.src = showobj.images[0].url;
-      image.alt = showobj.name;
-      paragraph.textContent = showobj.name;
+      showId = showobj.podcast_id;
+      image.src = showobj.image_url;
+      image.alt = showobj.title;
+      paragraph.textContent = showobj.title;
+      description.textContent = showobj.description;
     }
 
     button.addEventListener("click", async () => {
@@ -141,33 +151,45 @@ function createEpisodeButtons(episodes) {
     const button = document.createElement("button");
     const detailsContainer = document.createElement("div");
     const title = document.createElement("p");
+    const description = document.createElement("p");
 
     button.classList.add("episode");
     detailsContainer.classList.add("episodes-details-container");
+    description.classList.add("episodes-details-description");
 
-    button.dataset.spotifyId = episodeObj.uri;
+    button.dataset.spotifyId = episodeObj.id;
     title.textContent = episodeObj.name;
+    description.textContent = episodeObj.description;
+    // No description
+    if (description.textContent === "") {
+      description.textContent = "No description";
+    }
 
-    button.addEventListener("click", () => {
-      const spotifyUri = button.dataset.spotifyId;
-      playEpisode(spotifyUri);
-    });
     episodesContainer.appendChild(button);
     button.appendChild(detailsContainer);
     detailsContainer.appendChild(title);
+    detailsContainer.appendChild(description);
+  });
+
+  const iframe = document.getElementById("embed-iframe");
+  document.querySelectorAll(".episode").forEach((episode) => {
+    episode.addEventListener("click", () => {
+      console.log("ep clicked iframe");
+      iframe.src =
+        "https://open.spotify.com/embed/episode/" +
+        episode.dataset.spotifyId +
+        "?utm_source=generator&theme=0&t=0";
+      console.log(iframe);
+    });
   });
 }
 
 // Main function to initialize the popup
 async function initializePopup() {
   const authLink = document.getElementById("auth-link");
-  const podcastContainer = document.querySelector(".podcast-container");
+  const auth = document.querySelector(".non-authorized");
+  const mainContainer = document.querySelector(".main-container");
   const shuffle = document.querySelector(".material-symbols-outlined");
-
-  // Refresh recommended shows on shuffle click
-  shuffle.addEventListener("click", async () => {
-    const shows = await fetchAllShows(accessToken);
-  });
 
   // Get the access token and its expiration timestamp from local storage
   const storageData = await new Promise((resolve) => {
@@ -179,26 +201,32 @@ async function initializePopup() {
   const accessToken = storageData.accessToken;
   const tokenExpiration = storageData.tokenExpiration;
 
+  // Refresh recommended shows on shuffle click
+  shuffle.addEventListener("click", async () => {
+    const shows = await fetchRandomRecommendedShows();
+    createShowButtons(shows, accessToken, "REC_SHOWS");
+  });
+
   if (accessToken && tokenExpiration && Date.now() < tokenExpiration) {
     console.log("valid token");
     // Token is valid, proceed with fetching and rendering data
-    authLink.style.display = "none";
-    podcastContainer.style.display = "block";
+    auth.style.display = "none";
+    mainContainer.style.display = "block";
 
     // Fetch and initialize subscribed shows
     const myShowsData = await fetchSubscribedShows(accessToken);
     console.log("myShowsData", myShowsData);
     createShowButtons(myShowsData, accessToken, "MY_SHOWS");
 
-    // Fetch all shows
-    const allShowsData = await fetchAllShows(accessToken);
-    console.log("allShowsData", allShowsData);
-    createShowButtons(allShowsData, accessToken, "REC_SHOWS");
+    // Fetch recommended shows
+    const recShowsData = await fetchRandomRecommendedShows();
+    console.log("recShowsData", recShowsData);
+    createShowButtons(recShowsData, accessToken, "REC_SHOWS");
   } else {
     // Token is expired or not available, show the authorization link
     console.log("token invalid");
-    authLink.style.display = "block";
-    podcastContainer.style.display = "none";
+    auth.style.display = "block";
+    mainContainer.style.display = "none";
     authLink.href = authUrl;
     authLink.textContent = "Authorize with Spotify";
 
@@ -220,8 +248,8 @@ async function initializePopup() {
         if (!tokenResponse) {
           console.log("token exchange failed");
           // Token exchange failed, show the authorization link again
-          authLink.style.display = "block";
-          podcastContainer.style.display = "none";
+          auth.style.display = "block";
+          mainContainer.style.display = "none";
         } else if (tokenResponse.access_token) {
           const expirationTimestamp =
             Date.now() + tokenResponse.expires_in * 1000;
