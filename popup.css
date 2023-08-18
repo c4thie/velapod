@@ -118,6 +118,36 @@ iframe {
   font-size: 22px;
 }
 
+.podcast-selection input {
+  width: 220px;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  padding: 9px 9px 9px 20px;
+  background-color: rgb(50 50 50);
+  color: rgb(183, 183, 183);
+}
+
+.podcast-selection-body input::placeholder {
+  font-family: "Switzer", sans-serif;
+  font-weight: 500;
+  color: rgb(102, 102, 102);
+}
+
+.podcast-selection-body input:hover {
+  border: 1px rgb(102, 102, 102) solid;
+}
+
+input[type="search"]::-webkit-search-cancel-button {
+  /* Remove default */
+  -webkit-appearance: none;
+
+  /* Custom styles */
+  height: 15px;
+  width: 15px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23777'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>");
+  cursor: pointer;
+}
+
 .myshows,
 .episodes,
 .allshows {
@@ -195,13 +225,14 @@ iframe {
 
 /* Styles for the smaller buttons */
 .show .episode-button,
-.show .remove-button {
+.show .remove-button,
+.show .add-button {
   border-radius: 20px;
   border: none;
   text-align: center;
   font-family: "Switzer", sans-serif;
   font-weight: 600;
-  padding: 3px 9px;
+  padding: 7px 15px;
   margin: 3px;
 
   display: none;
@@ -212,14 +243,16 @@ iframe {
   color: black;
 }
 
-.show .remove-button {
+.show .remove-button,
+.show .add-button {
   color: rgb(255, 255, 255);
   background-color: black;
 }
 
 /* Styles for the episode and remove buttons when shown */
 .show:hover .episode-button,
-.show:hover .remove-button {
+.show:hover .remove-button,
+.show:hover .add-button {
   display: inline-block;
   cursor: pointer;
 }

@@ -39,7 +39,7 @@
         "https://open.spotify.com/embed-podcast/iframe-api/v1",
         "<all_urls>"
       ],
-      "js": ["content-script.js"],
+      "js": ["src/content-script.js"],
       "run_at": "document_start",
       "all_frames": false
     }

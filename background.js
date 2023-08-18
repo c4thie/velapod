@@ -1,3 +1,5 @@
+import { showEpisodeDescription } from "./src/popup.js";
+
 chrome.runtime.onInstalled.addListener(function () {
   // Set up rules for declarativeContent
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
@@ -13,3 +15,13 @@ chrome.runtime.onInstalled.addListener(function () {
     ]);
   });
 });
+
+chrome.contextMenus.removeAll(function () {
+  chrome.contextMenus.create({
+    id: "1",
+    title: "See Episode Description",
+    contexts: ["selection"], // ContextType
+  });
+});
+
+chrome.contextMenus.onClicked.addListener(showEpisodeDescription);
