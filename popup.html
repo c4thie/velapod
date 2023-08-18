@@ -40,7 +40,7 @@
             style="border-radius: 12px"
             src="https://open.spotify.com/embed/episode/6Za8hWs40hwFT7KKiPfttR?utm_source=generator&theme=0&t=0"
             width="100%"
-            height="152"
+            height="200"
             frameborder="0"
             allowfullscreen=""
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -55,13 +55,6 @@
         </div>
       </div>
       <div class="podcast-selection">
-        <!-- <div class="toggle-container">
-          <span class="material-symbols-outlined collapse"> expand_less </span>
-          <span class="material-symbols-outlined expand hidden">
-            expand_more
-          </span>
-        </div> -->
-        <!-- Display all shows -->
         <div class="podcast-selection-body">
           <h2>Browse</h2>
           <div class="allshows">
@@ -79,7 +72,12 @@
 
           <!-- Display active show's episodes -->
           <div class="episodes">
-            <h3>Episodes</h3>
+            <div class="episodes-header">
+              <h3>Episodes</h3>
+              <span class="material-symbols-outlined" id="switchEpisodesButton">
+                arrow_forward
+              </span>
+            </div>
             <div class="episodes-container"></div>
           </div>
         </div>

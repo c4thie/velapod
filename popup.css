@@ -45,9 +45,10 @@ body {
 }
 
 .non-authorized span {
-  background: -webkit-linear-gradient(#eee, #00923a);
+  /* background: -webkit-linear-gradient(#eee, #00923a);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent; */
+  background-color: "#00923a";
 }
 
 .non-authorized p {
@@ -75,6 +76,7 @@ body {
   width: 597px;
   height: 195px;
   top: 0;
+  z-index: 99;
   background-color: rgb(27, 27, 27);
 }
 
@@ -88,7 +90,7 @@ body {
 
 iframe {
   width: 545px;
-  height: 152px;
+  height: 200px;
   border: none;
   border-radius: 12px;
 }
@@ -122,6 +124,15 @@ iframe {
   display: block;
 }
 
+.limit-message {
+  color: #2cb152;
+  font-family: "Switzer", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 100px;
+}
+
 .myshows p,
 .allshows p {
   width: 110px;
@@ -136,7 +147,8 @@ iframe {
   justify-content: flex-start;
 }
 
-.allshows-header {
+.allshows-header,
+.episodes-header {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -172,6 +184,7 @@ iframe {
 }
 
 .show {
+  height: 55px;
   width: 190px;
   padding: 2px;
 }
@@ -183,13 +196,32 @@ iframe {
 /* Styles for the smaller buttons */
 .show .episode-button,
 .show .remove-button {
+  border-radius: 20px;
+  border: none;
+  text-align: center;
+  font-family: "Switzer", sans-serif;
+  font-weight: 600;
+  padding: 3px 9px;
+  margin: 3px;
+
   display: none;
+}
+
+.show .episode-button {
+  margin-left: 10px;
+  color: black;
+}
+
+.show .remove-button {
+  color: rgb(255, 255, 255);
+  background-color: black;
 }
 
 /* Styles for the episode and remove buttons when shown */
 .show:hover .episode-button,
 .show:hover .remove-button {
   display: inline-block;
+  cursor: pointer;
 }
 
 .episode {
@@ -202,7 +234,6 @@ iframe {
 .show {
   margin-bottom: 7px;
   margin-right: 7px;
-  cursor: pointer;
   /* background-color: #f0f0f0; */
   background: rgb(214, 214, 214);
   background: linear-gradient(
@@ -243,9 +274,11 @@ iframe {
 
 .episodes-details-description {
   color: rgba(128, 128, 128, 0.9);
-  white-space: nowrap; /* Prevent line breaks within the description */
-  overflow: hidden; /* Hide any overflow content */
-  text-overflow: ellipsis; /* Add ellipsis for overflow content */
+  white-space: normal; /* Allow multiple lines */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical; /* Vertical layout */
   font-weight: 500;
 }
 

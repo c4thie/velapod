@@ -6,7 +6,7 @@ import {
   subscribeToShow,
 } from "./api.js";
 
-import { exchangeAuthorizationCode } from "./oauth.js";
+import { exchangeAuthorizationCode, authUrl } from "./oauth.js";
 
 // Get the user's language setting
 const userLanguage = chrome.i18n.getUILanguage();
@@ -19,7 +19,7 @@ console.log(welcomeMessage);
 const userCountry = userLanguage.substr(-2);
 
 // Function to create show buttons and add click listeners
-function createMyShowButtons(showsList, accessToken, type) {
+function createMyShowButtons(showsList, accessToken) {
   var showsContainer = document.querySelector(".myshows-container");
   showsContainer.innerHTML = "";
 
@@ -65,7 +65,7 @@ function createMyShowButtons(showsList, accessToken, type) {
 
     episodeButton.addEventListener("click", async () => {
       const episodes = await fetchEpisodes(showId, accessToken);
-      createEpisodeButtons(episodes);
+      createEpisodeButtons(episodes, episodes.items.slice(0, 25), true);
     });
 
     removeButton.classList.add("remove-button");
@@ -90,13 +90,8 @@ function createMyShowButtons(showsList, accessToken, type) {
 }
 
 // Function to create show buttons and add click listeners
-function createShowButtons(showsList, accessToken, type) {
-  var showsContainer = document.querySelector(".myshows-container");
-  console.log("myshowslist", showsList);
-  if (type === "REC_SHOWS") {
-    showsContainer = document.querySelector(".recshows-container");
-    console.log("recshowslist", showsList);
-  }
+function createShowButtons(showsList, accessToken) {
+  const showsContainer = document.querySelector(".recshows-container");
 
   // Clear existing child elements of the showsContainer
   showsContainer.innerHTML = "";
@@ -115,22 +110,21 @@ function createShowButtons(showsList, accessToken, type) {
     detailsContainer.classList.add("shows-details-container");
 
     // Image source and alt
-    if (type === "MY_SHOWS") {
-      showId = showobj.show.id;
-      image.src = showobj.show.images[0].url;
-      image.alt = showobj.show.name;
-      paragraph.textContent = showobj.show.name;
-    } else if (type === "REC_SHOWS") {
-      showId = showobj.podcast_id;
-      image.src = showobj.image_url;
-      image.alt = showobj.title;
-      paragraph.textContent = showobj.title;
-      description.textContent = showobj.description;
-    }
+    showId = showobj.podcast_id;
+    image.src = showobj.image_url;
+    image.alt = showobj.title;
+    paragraph.textContent = showobj.title;
+    description.textContent = showobj.description;
 
     button.addEventListener("click", async () => {
       const episodes = await fetchEpisodes(showId, accessToken);
-      createEpisodeButtons(episodes);
+      createEpisodeButtons(episodes, episodes.items.slice(0, 25), true);
+    });
+
+    // Add right-click event listener to show description
+    button.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      showEpisodeDescription(description.textContent);
     });
     showsContainer.appendChild(button);
     button.appendChild(detailsContainer);
@@ -139,12 +133,48 @@ function createShowButtons(showsList, accessToken, type) {
   });
 }
 
-// Function to create episode buttons
-function createEpisodeButtons(episodes) {
+// Function to create all episode buttons
+function createEpisodeButtons(
+  episodesObj,
+  displayedEpisodesItem,
+  isShowingFirst25
+) {
   const episodesContainer = document.querySelector(".episodes-container");
   episodesContainer.innerHTML = ""; // Clear previous episodes
-  const episodesList = episodes.items;
-  episodesList.forEach((episodeObj) => {
+  const episodesList = displayedEpisodesItem;
+
+  const switchEpisodesButton = document.getElementById("switchEpisodesButton");
+
+  // Update the button text based on the initial state
+  // switchEpisodesButton.textContent = isShowingFirst25
+  //   ? "arrow_forward"
+  //   : "arrow_back";
+
+  // Add event listener to navigate between episodes & switch arrow icons
+  switchEpisodesButton.addEventListener("click", () => {
+    isShowingFirst25 = !isShowingFirst25;
+
+    // Update the button text based on the new state
+    switchEpisodesButton.textContent = isShowingFirst25
+      ? "arrow_forward"
+      : "arrow_back";
+
+    if (isShowingFirst25) {
+      switchEpisodesButton.textContent = "arrow_forward";
+      console.log("clicked on arrow forward");
+      createEpisodeButtonsSlice(episodesList.slice(0, 25), true); // Display the first 25 episodes
+    } else {
+      switchEpisodesButton.textContent = "arrow_back";
+      console.log("clicked on arrow back");
+      createEpisodeButtonsSlice(episodesObj.items.slice(25, 50), false); // Display the last 25 episodes
+    }
+  });
+
+  const episodesToShow = isShowingFirst25
+    ? episodesList.slice(0, 25)
+    : episodesList.slice(25, 50);
+
+  episodesToShow.forEach((episodeObj) => {
     const button = document.createElement("button");
     const detailsContainer = document.createElement("div");
     const title = document.createElement("p");
@@ -161,6 +191,12 @@ function createEpisodeButtons(episodes) {
     if (description.textContent === "") {
       description.textContent = "No description";
     }
+
+    // Add right-click event listener to show description
+    button.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      showEpisodeDescription(description.textContent);
+    });
 
     episodesContainer.appendChild(button);
     button.appendChild(detailsContainer);
@@ -181,9 +217,96 @@ function createEpisodeButtons(episodes) {
   });
 }
 
+function createEpisodeButtonsSlice(displayedEpisodesItem, isShowingFirst25) {
+  const episodes = document.querySelector(".episodes");
+  const episodesContainer = document.querySelector(".episodes-container");
+  episodesContainer.innerHTML = ""; // Clear previous episodes
+  console.log(displayedEpisodesItem);
+
+  displayedEpisodesItem.forEach((episodeObj) => {
+    const button = document.createElement("button");
+    const detailsContainer = document.createElement("div");
+    const title = document.createElement("p");
+    const description = document.createElement("p");
+
+    button.classList.add("episode");
+    detailsContainer.classList.add("episodes-details-container");
+    description.classList.add("episodes-details-description");
+
+    button.dataset.spotifyId = episodeObj.id;
+    title.textContent = episodeObj.name;
+    description.textContent = episodeObj.description;
+    // No description
+    if (description.textContent === "") {
+      description.textContent = "No description";
+    }
+
+    // Add right-click event listener to show description
+    button.addEventListener("contextmenu", (event) => {
+      event.preventDefault();
+      showEpisodeDescription(description.textContent);
+    });
+
+    episodesContainer.appendChild(button);
+    button.appendChild(detailsContainer);
+    detailsContainer.appendChild(title);
+    detailsContainer.appendChild(description);
+  });
+
+  const iframe = document.getElementById("embed-iframe");
+  document.querySelectorAll(".episode").forEach((episode) => {
+    episode.addEventListener("click", () => {
+      console.log("ep clicked iframe");
+      iframe.src =
+        "https://open.spotify.com/embed/episode/" +
+        episode.dataset.spotifyId +
+        "?utm_source=generator&theme=0&t=0";
+      console.log(iframe);
+    });
+  });
+
+  const limitMessage = document.createElement("p");
+
+  if (!isShowingFirst25) {
+    limitMessage.classList.add("limit-message");
+    limitMessage.innerHTML =
+      "Only 50 Episodes are available. Please click on the Web Player to listen to older episodes on the Spotify Web App";
+    episodes.appendChild(limitMessage);
+  } else {
+    limitMessage.style.display = "none";
+  }
+}
+
+export function showEpisodeDescription(description) {
+  const episodeButton = document.querySelector(".episode");
+
+  const popup = document.createElement("div");
+  popup.classList.add("episode-description-popup");
+
+  // Create a paragraph element for the description
+  const descriptionParagraph = document.createElement("p");
+  descriptionParagraph.textContent = description;
+
+  // Append the description paragraph to the dropdown
+  dropdown.appendChild(descriptionParagraph);
+
+  // Add the dropdown to the body
+  episodeButton.appendChild(dropdown);
+
+  // Calculate the position of the dropdown and set its style
+  const rect = description.getBoundingClientRect();
+  dropdown.style.position = "absolute";
+  dropdown.style.left = rect.left + "5px";
+  dropdown.style.top = rect.bottom + "20px";
+
+  // Add a click event listener to the dropdown to remove it when clicked
+  popup.addEventListener("click", () => {
+    document.body.removeChild(popup);
+  });
+}
+
 // Main function to initialize the popup
 async function initializePopup() {
-  const body = document.querySelector("body");
   const authLink = document.getElementById("auth-link");
   const auth = document.querySelector(".non-authorized");
   const mainContainer = document.querySelector(".main-container");
@@ -191,6 +314,11 @@ async function initializePopup() {
   const shuffle = document.querySelector(".shuffle");
   const collapse = document.querySelector(".collapse");
   const expand = document.querySelector(".expand");
+
+  // Additional formatting for popup
+  const body = document.querySelector("body");
+  const iframe = document.querySelector("iframe");
+  // const iframeImg = document.querySelector(".Metadata_coverArt__AZhtt");
 
   // initially hide expand icon
   expand.style.display = "none";
@@ -208,12 +336,17 @@ async function initializePopup() {
   // Refresh recommended shows on shuffle click
   shuffle.addEventListener("click", async () => {
     const shows = await fetchRandomRecommendedShows();
-    createShowButtons(shows, accessToken, "REC_SHOWS");
+    createShowButtons(shows, accessToken);
   });
 
   // Open accordion when expand is clicked
   expand.addEventListener("click", async () => {
     body.style.height = "550px";
+    body.style.width = "600px";
+    iframe.style.width = "545px";
+    // iframeImg.style.width = "90px";
+    // iframeImg.style.height = "90px";
+    // iframeImg.style.margin = "8px auto";
     browser.style.display = "block";
     collapse.style.display = "block";
     expand.style.display = "none";
@@ -222,6 +355,11 @@ async function initializePopup() {
   // When collapse is clicked, close accordion
   collapse.addEventListener("click", async () => {
     body.style.height = "157px";
+    body.style.width = "220px";
+    iframe.style.width = "170px";
+    // iframeImg.style.width = "100px";
+    // iframeImg.style.height = "100px";
+    // iframeImg.style.margin = "8px 10px";
     browser.style.display = "none";
     collapse.style.display = "none";
     expand.style.display = "block";
@@ -236,12 +374,12 @@ async function initializePopup() {
     // Fetch and initialize subscribed shows
     const myShowsData = await fetchSubscribedShows(accessToken);
     console.log("myShowsData", myShowsData);
-    createMyShowButtons(myShowsData, accessToken, "MY_SHOWS");
+    createMyShowButtons(myShowsData, accessToken);
 
     // Fetch recommended shows
     const recShowsData = await fetchRandomRecommendedShows();
     console.log("recShowsData", recShowsData);
-    createShowButtons(recShowsData, accessToken, "REC_SHOWS");
+    createShowButtons(recShowsData, accessToken);
   } else {
     // Token is expired or not available, show the authorization link
     console.log("token invalid");

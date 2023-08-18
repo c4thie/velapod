@@ -7,7 +7,7 @@ const scope = "user-library-modify user-library-read";
 var accessToken = undefined;
 
 // Construct the authorization URL
-const authUrl = `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(
+export const authUrl = `https://accounts.spotify.com/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(
   redirectUri
 )}&scope=${encodeURIComponent(scope)}&response_type=code`;
 

@@ -3,7 +3,13 @@
   "name": "Spotify Podcast",
   "version": "1.0",
   "description": "Browse and play Spotify podcasts",
-  "permissions": ["storage", "activeTab", "declarativeContent", "i18n"],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "declarativeContent",
+    "i18n",
+    "contextMenus"
+  ],
   "host_permissions": [
     "https://api.spotify.com/*",
     "https://accounts.spotify.com/*",

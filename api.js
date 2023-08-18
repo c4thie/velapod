@@ -37,11 +37,14 @@ export async function fetchSubscribedShows(accessToken) {
 
 // Fetch episodes for a show
 export async function fetchEpisodes(showId, accessToken) {
-  const response = await fetch(`${spotifyAPIBase}/shows/${showId}/episodes`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+  const response = await fetch(
+    `${spotifyAPIBase}/shows/${showId}/episodes?limit=50`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     console.error("Error fetching episodes:", response.statusText);
