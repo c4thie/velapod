@@ -70,6 +70,108 @@ body {
   color: #f4f4f4;
 }
 
+.select-hidden {
+  display: none;
+  visibility: hidden;
+  padding-right: 10px;
+}
+
+#country select {
+  width: 260px;
+  height: 34px;
+  overflow: hidden;
+  /* background: url("../img/downarrow_blue.png") no-repeat right #fff; */
+  border: 1px solid #ccc;
+  margin: auto;
+  padding: 10px;
+  border-radius: 6px;
+  -webkit-appearance: none;
+}
+
+#country {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  font-size: 16px;
+  color: rgb(183, 183, 183);
+  background-color: rgb(50 50 50);
+  width: 260px;
+  height: 40px;
+  font-family: "Switzer", sans-serif;
+  font-weight: 500;
+  padding: 7px 6px 9px 6px;
+  border: 1px solid rgb(183, 183, 183);
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+/* #country {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(128, 128, 128, 0.9);
+  padding: 8px 15px;
+  transition: all 0.2s ease-in;
+} */
+
+#country:after {
+  content: "";
+  width: 0;
+  height: 0;
+  /* border: 7px solid transparent; */
+  /* border-color: rgba(228, 228, 228, 0.9) transparent transparent transparent; */
+  border-radius: 20px;
+  /* position: absolute; */
+  top: 16px;
+  right: 10px;
+}
+
+#country:hover {
+  background-color: darken(rgba(128, 128, 128, 0.9), 2);
+}
+
+#country:active,
+#country .active {
+  background-color: darken(rgba(128, 128, 128, 0.9), 5);
+}
+#country:after,
+#country .active:after {
+  top: 9px;
+  border-color: transparent transparent rgba(228, 228, 228, 0.9) transparent;
+}
+
+/* .select-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  z-index: 999;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background-color: darken(rgba(128, 128, 128, 0.9), 5);
+} */
+
+/* .select-options li {
+  margin: 0;
+  padding: 12px 0;
+  text-indent: 15px;
+  border-top: 1px solid darken(rgba(128, 128, 128, 0.9), 10);
+  transition: all 0.15s ease-in;
+}
+.select-options li:hover,
+.select-options li .is-selected {
+  color: rgba(128, 128, 128, 0.9);
+  background: rgba(228, 228, 228, 0.9);
+} */
+
+.select-options li[rel="hide"] {
+  display: none;
+}
+
 .podcast-container {
   position: fixed;
   display: flex;

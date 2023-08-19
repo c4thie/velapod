@@ -28,6 +28,9 @@
         which allows you to listen to your favorite podcasts while you surf the
         web.
       </p>
+      <select id="country" required>
+        <option value="" disabled selected>Select your Location</option>
+      </select>
       <a id="auth-link" href="#"></a>
     </div>
     <div class="background"></div>
@@ -76,10 +79,10 @@
             <div class="episodes-header">
               <h3>Episodes</h3>
               <span class="material-symbols-outlined" id="switchEpisodesButton">
-                arrow_forward
               </span>
             </div>
             <div class="episodes-container"></div>
+            <p class="limit-message"></p>
           </div>
         </div>
       </div>
