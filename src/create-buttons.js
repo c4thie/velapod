@@ -172,9 +172,21 @@ export function createEpisodeButtons(
 ) {
   const episodesContainer = document.querySelector(".episodes-container");
   const switchEpisodesButton = document.getElementById("switchEpisodesButton");
-
+  const limitMessage = document.querySelector(".limit-message");
+  
+  limitMessage.innerHTML = ""; // Clear previous message
   episodesContainer.innerHTML = ""; // Clear previous episodes
   const episodesList = displayedEpisodesItem;
+
+  // Initially show the button text based on the new state
+  if (
+    (episodesObj.items && episodesObj.items.length <= 25) ||
+    (!episodesObj.items && episodesObj.length <= 25)
+  ) {
+    switchEpisodesButton.textContent = "";
+  } else {
+    switchEpisodesButton.textContent = "arrow_forward";
+  }
 
   // Add event listener to navigate between episodes & switch arrow icons
   switchEpisodesButton.addEventListener("click", () => {
@@ -289,20 +301,17 @@ function createEpisodeButtonsSlice(displayedEpisodesItem, isShowingFirst25) {
     });
   });
 
-  // Notice user of Spotify API limits (50 episodes)
-  const limitMessage = document.createElement("p");
-  limitMessage.classList.add("limit-message");
+  const limitMessage = document.querySelector(".limit-message");
 
   if (!isShowingFirst25) {
+    // Notice user of Spotify API limits (50 episodes)
+    limitMessage.innerHTML = "";
     limitMessage.innerHTML =
       "Only 50 Episodes are available. Please click on the Web Player to listen to older episodes on the Spotify Web App";
     // Only add limit message if doesn't aleady exist on page
-    if (!episodes.contains(limitMessage)) {
-      episodes.appendChild(limitMessage);
-    }
   } else {
     // If showing the first 25 episodes, do not show limit message
-    limitMessage.style.display = "none";
+    limitMessage.innerHTML = "";
   }
 }
 
