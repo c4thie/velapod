@@ -173,7 +173,7 @@ export function createEpisodeButtons(
   const episodesContainer = document.querySelector(".episodes-container");
   const switchEpisodesButton = document.getElementById("switchEpisodesButton");
   const limitMessage = document.querySelector(".limit-message");
-  
+
   limitMessage.innerHTML = ""; // Clear previous message
   episodesContainer.innerHTML = ""; // Clear previous episodes
   const episodesList = displayedEpisodesItem;
@@ -225,15 +225,11 @@ export function createEpisodeButtons(
     button.dataset.spotifyId = episodeObj.id;
     title.textContent = episodeObj.name;
     description.textContent = episodeObj.description;
+    
     // No description
     if (description.textContent === "") {
       description.textContent = "No description";
     }
-
-    // Add right-click event listener to show description
-    button.addEventListener("contextmenu", (event) => {
-      createContextMenu(description.textContent);
-    });
 
     episodesContainer.appendChild(button);
     button.appendChild(detailsContainer);
@@ -283,10 +279,19 @@ function createEpisodeButtonsSlice(displayedEpisodesItem, isShowingFirst25) {
     detailsContainer.appendChild(title);
     detailsContainer.appendChild(description);
 
-    // Add right-click event listener to show description
-    button.addEventListener("contextmenu", (event) => {
-      createContextMenu(description.textContent);
+    // Event listener to show episode description on hover
+    button.addEventListener("mouseenter", () => {
+      showEpisodeDescription(description.textContent, button);
     });
+
+    button.addEventListener("mouseleave", () => {
+      hideEpisodeDescription();
+    });
+
+    // // Add right-click event listener to show description
+    // button.addEventListener("contextmenu", (event) => {
+    //   createContextMenu(description.textContent);
+    // });
   });
 
   const iframe = document.getElementById("embed-iframe");
@@ -315,9 +320,7 @@ function createEpisodeButtonsSlice(displayedEpisodesItem, isShowingFirst25) {
   }
 }
 
-function showEpisodeDescription(description) {
-  const episodeButton = document.querySelector(".episode");
-
+function showEpisodeDescription(description, button) {
   // Remove any existing popup
   const existingPopup = document.querySelector(".episode-description-popup");
   if (existingPopup) {
@@ -332,21 +335,29 @@ function showEpisodeDescription(description) {
   descriptionParagraph.textContent = description;
 
   // Append the description paragraph to the dropdown
-  popup.appendChild(descriptionParagraph);
+  if (description) {
+    popup.appendChild(descriptionParagraph);
 
-  // Add the dropdown to the body
-  episodeButton.appendChild(popup);
+    // Calculate the position of the dropdown and set its style
+    const rect = button.getBoundingClientRect();
+    popup.style.left = rect.left + "5px";
+    popup.style.top = rect.bottom + "20px";
 
-  // Calculate the position of the dropdown and set its style
-  const rect = description.getBoundingClientRect();
-  popup.style.position = "absolute";
-  popup.style.left = rect.left + "5px";
-  popup.style.top = rect.bottom + "20px";
+    // Add the dropdown to the body
+    document.body.appendChild(popup);
 
-  // Add a click event listener to the dropdown to remove it when clicked
-  popup.addEventListener("click", () => {
-    document.body.removeChild(popup);
-  });
+    // Add a mouse leave event listener to the button to remove the popup
+    button.addEventListener("mouseleave", () => {
+      hideEpisodeDescription();
+    });
+  }
+}
+
+function hideEpisodeDescription() {
+  const popup = document.querySelector(".episode-description-popup");
+  if (popup) {
+    popup.remove();
+  }
 }
 
 export function clearEpisodeButtons() {

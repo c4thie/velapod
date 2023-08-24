@@ -8,7 +8,8 @@
     "activeTab",
     "declarativeContent",
     "i18n",
-    "contextMenus"
+    "contextMenus",
+    "tabs"
   ],
   "host_permissions": [
     "https://api.spotify.com/*",

@@ -1,5 +1,14 @@
 import { showEpisodeDescription } from "./src/popup.js";
 
+// Handle the message from the content script
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+  // Open the popup page with the captured code
+  if (message.authorizationCode) {
+    chrome.action.setPopup({ popup: "popup.html" });
+    chrome.action.openPopup();
+  }
+});
+
 chrome.runtime.onInstalled.addListener(function () {
   // Set up rules for declarativeContent
   chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {

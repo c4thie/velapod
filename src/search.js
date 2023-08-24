@@ -21,11 +21,12 @@ async function performSearch(query) {
   }
 
   // Get accessToken
-  const accessTokenData = await new Promise((resolve) => {
-    chrome.storage.local.get(["accessToken"], (result) => resolve(result));
-  });
-  const accessToken = accessTokenData.accessToken;
-  console.log(accessToken);
+  const accessToken = localStorage.getItem("access_token");
+  // const accessTokenData = await new Promise((resolve) => {
+  //   chrome.storage.local.get(["accessToken"], (result) => resolve(result));
+  // });
+  // const accessToken = accessTokenData.accessToken;
+  // console.log(accessToken);
 
   const allShowData = await fetchAllShows();
   const allShowIds = allShowData.map((show) => show.podcast_id);
@@ -96,7 +97,6 @@ async function displaySearchResults(
 
 // Add event listeners to handle search input
 const searchInput = document.getElementById("search-input");
-console.log(searchInput);
 searchInput.addEventListener("input", (event) => {
   console.log("input");
   const searchQuery = event.target.value;

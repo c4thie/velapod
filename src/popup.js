@@ -1,14 +1,13 @@
 // Imports
 import {
   fetchRandomRecommendedShows,
-  fetchEpisodes,
   fetchSubscribedShows,
-  unsubscribeFromShow,
-  subscribeToShow,
+  fetchToken,
 } from "./api.js";
-import { createContextMenu } from "./context-menu.js";
-import { authenticate, exchangeAuthorizationCode, authUrl } from "./oauth.js";
+// import { createContextMenu } from "./context-menu.js";
+import { redirectToAuthCodeFlow } from "./oauth.js";
 import { createShowButtons, createMyShowButtons } from "./create-buttons.js";
+import { markets } from "./constants/markets.js";
 
 // Get the user's language setting
 const userLanguage = chrome.i18n.getUILanguage();
@@ -31,33 +30,32 @@ export async function initializePopup() {
   const expand = document.querySelector(".expand");
   const limitMessage = document.querySelector(".limit-message");
 
-  // initially make sure limitMessage is blank
-  limitMessage.innerHTML = "";
-
   // Additional formatting for popup
   const body = document.querySelector("body");
   const iframe = document.querySelector("iframe");
+
+  // initially make sure limitMessage is blank
+  limitMessage.innerHTML = "";
 
   // initially hide expand icon
   expand.style.display = "none";
 
   // Get the access token and its expiration timestamp from local storage
-  const storageData = await new Promise((resolve) => {
-    chrome.storage.local.get(
-      ["accessToken", "tokenExpiration", "selectedCountry"],
-      (result) => resolve(result)
-    );
-  });
+  // const storageData = await new Promise((resolve) => {
+  //   chrome.storage.local.get(["accessToken", "tokenExpiration"], (result) =>
+  //     resolve(result)
+  //   );
+  // });
+  const accessToken = localStorage.getItem("access_token");
+  const tokenExpiration = localStorage.getItem("tokenExpiration");
+  console.log(
+    "accessToken, tokenExpiration, dateNOW",
+    accessToken,
+    tokenExpiration,
+    Date.now()
+  );
 
-  const accessToken = storageData.accessToken;
-  const tokenExpiration = storageData.tokenExpiration;
   const selectedCountry = localStorage.getItem("selectedCountry");
-  // const selectedCountry = storageData.selectedCountry;
-  // console.log(
-  //   "accessToken: " + accessToken,
-  //   "tokenExpiration: " + tokenExpiration,
-  //   "selectedCountry: " + selectedCountry
-  // );
 
   // Refresh recommended shows on shuffle click
   shuffle.addEventListener("click", async () => {
@@ -98,7 +96,6 @@ export async function initializePopup() {
     createMyShowButtons(myShowsData, accessToken);
 
     // Fetch recommended shows
-    // Fetch and display recommended shows based on the selected country
     if (selectedCountry) {
       const recShowsData = await fetchRandomRecommendedShows(selectedCountry);
 
@@ -108,56 +105,39 @@ export async function initializePopup() {
     } else {
       console.error("No selected country found.");
     }
-    // const recShowsData = await fetchRandomRecommendedShows(selectedCountry);
-    // console.log("recShowsData", recShowsData);
-    // createShowButtons(recShowsData, accessToken);
   } else {
-    authenticate();
-    // // Token is expired or not available, show the authorization link
-    // console.log("token invalid");
-    // auth.style.display = "block";
-    // mainContainer.style.display = "none";
-    // authLink.href = authUrl;
-    // authLink.textContent = "Authorize with Spotify";
+    // Token is expired or not available, show the authorization link
+    console.log("token invalid");
+    auth.style.display = "flex";
+    mainContainer.style.display = "none";
 
-    // // Click event listener to the link
-    // authLink.addEventListener("click", async (event) => {
-    //   event.preventDefault();
-    //   window.location.href = authUrl;
+    // Create options for country selection
+    const select = document.querySelector("select");
 
-    //   const authorizationCode = new URLSearchParams(window.location.search).get(
-    //     "code"
-    //   );
-    //   if (authorizationCode) {
-    //     console.log("auth obtained, waiting for token validation");
-    //     const tokenResponse = await exchangeAuthorizationCode(
-    //       authorizationCode
-    //     );
+    markets.forEach((marketObj) => {
+      const option = document.createElement("option");
+      option.value = marketObj.code;
+      option.textContent = marketObj.label;
+      select.appendChild(option);
+    });
 
-    //     if (!tokenResponse) {
-    //       console.log("token exchange failed");
-    //       // Token exchange failed, show the authorization link again
-    //       auth.style.display = "block";
-    //       mainContainer.style.display = "none";
-    //     } else if (tokenResponse.access_token) {
-    //       const expirationTimestamp =
-    //         Date.now() + tokenResponse.expires_in * 1000;
+    // Event listener for select element
+    select.addEventListener("change", (event) => {
+      const selectedCountry = event.target.value;
+      localStorage.setItem("selectedCountry", selectedCountry);
+      console.log("set selectedCountry", selectedCountry);
+    });
 
-    //       // Store the access token and its expiration timestamp in the extension's storage
-    //       chrome.storage.local.set(
-    //         {
-    //           accessToken: tokenResponse.access_token,
-    //           tokenExpiration: expirationTimestamp,
-    //         },
-    //         function () {
-    //           console.log("Access token stored.");
-    //           // Initialize popup after storing the token
-    //           initializePopup();
-    //         }
-    //       );
-    //     }
-    //   }
-    // });
+    authLink.textContent = "Authorize with Spotify";
+
+    // Click event listener to the link
+    authLink.addEventListener("click", async (event) => {
+      event.preventDefault();
+      console.log("authLink clicked");
+      await redirectToAuthCodeFlow();
+      // After successful authorization, the page will be redirected
+      // and the initializePopup function will be called again with a valid token
+    });
   }
 }
 
@@ -166,5 +146,72 @@ document.addEventListener("DOMContentLoaded", async function () {
   console.log("page loaded");
   initializePopup();
 });
+
+// popup.js
+window.onload = async function () {
+  // Function to extract query parameters from the URL
+  function getQueryParam(url, name) {
+    const params = new URLSearchParams(new URL(url).search);
+    return params.get(name);
+  }
+
+  // Get the authorization code from the URL
+  const authorizationCode = getQueryParam(window.location.href, "code");
+  const redirectUri = chrome.runtime.getURL("popup.html");
+
+  if (authorizationCode) {
+    // Authorization code is available, send it to backend for token exchange using an API call.
+    console.log("popup.js: Authorization Code:", authorizationCode);
+
+    const tokenResponse = await fetchToken(authorizationCode, redirectUri);
+    if (tokenResponse && tokenResponse.access_token) {
+      console.log(
+        "popup.js: token response retrieved successfully",
+        tokenResponse
+      );
+      const expirationTimestamp = Date.now() + tokenResponse.expires_in * 1000;
+
+      // Store the access token and its expiration timestamp in the extension's storage
+      chrome.storage.local.set(
+        {
+          accessToken: tokenResponse.access_token,
+          tokenExpiration: expirationTimestamp,
+        },
+        function () {
+          console.log("oauth.js: Access token stored.");
+          // Initialize popup after storing the token
+          initializePopup();
+        }
+      );
+      localStorage.setItem("access_token", tokenResponse.access_token);
+      localStorage.setItem("tokenExpiration", expirationTimestamp);
+      console.log(
+        "popup.js: Access token stored, access_token, tokenExpiration: " +
+          JSON.stringify(tokenResponse)
+      );
+
+      // Initialize popup after storing the token
+      // initializePopup();
+    } else {
+      console.log("popup.js: token response was not found", tokenResponse);
+      // } else {
+      //   console.log(
+      //     "oauth.js: couldn't find authentication code, restarting authcodeflow"
+      //   );
+      //   // await redirectToAuthCodeFlow();
+      // }
+    }
+  } else {
+    console.log(
+      "popup.js: No authorization code found in the URL.",
+      authorizationCode
+    );
+  }
+};
+
+// chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+//   const tab = tabs[0];
+//   chrome.tabs.update(tab.id, { url: "popup.html" });
+// });
 
 export { subscribedShowsData };
