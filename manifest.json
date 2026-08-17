@@ -5,9 +5,10 @@
   "version": "2.0.0",
   "description": "Discover podcasts and listen with Spotify.",
   "minimum_chrome_version": "109",
-  "permissions": ["storage", "identity"],
+  "permissions": ["storage", "identity", "contextMenus"],
   "host_permissions": ["https://api.spotify.com/*", "https://accounts.spotify.com/*"],
   "action": { "default_title": "Spot the Pod", "default_popup": "popup.html", "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "128": "icons/128.png" } },
+  "background": { "service_worker": "background.js" },
   "options_page": "options.html",
   "icons": { "16": "icons/16.png", "32": "icons/32.png", "64": "icons/64.png", "128": "icons/128.png", "256": "icons/256.png" },
   "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://open.spotify.com; img-src 'self' https://i.scdn.co data:" }

@@ -7,7 +7,7 @@ Spot the Pod helps users discover and play Spotify podcasts.
 ## Data used
 
 - **Spotify authorization:** Spotify OAuth access and refresh tokens are stored in Chrome's local extension storage and sent only to Spotify to perform requests initiated by the user.
-- **Podcast activity:** Search terms, selected market codes, and catalogue requests are sent directly to Spotify. An optional language/episode length preference is stored locally and used to filter Spotify catalogue metadata in the extension; it is not sent to an application server. Spot the Pod does not operate an analytics or application server.
+- **Podcast activity:** Search terms—including text selected for context-menu discovery—selected market codes, and catalogue requests are sent directly to Spotify. An optional language/episode length preference is stored locally and used to filter Spotify catalogue metadata in the extension; it is not sent to an application server. Spot the Pod does not operate an analytics or application server.
 
 ## Sharing and retention
 

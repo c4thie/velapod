@@ -4,9 +4,10 @@ A Chrome extension for discovering podcasts and listening through Spotify.
 
 ## In 2.0
 
-- Chrome Manifest V3 with only `storage` and `identity` permissions
+- Chrome Manifest V3 with only `storage`, `identity`, and `contextMenus` permissions
 - Spotify Authorization Code with PKCE; no client secret or localhost backend
 - recommendations and manual language selection
+- context-menu discovery from selected webpage text
 - podcast search, episode browsing
 - no content scripts, browsing-history access, remote JavaScript
 

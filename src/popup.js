@@ -4,8 +4,9 @@ import { languageName, supportedLanguages } from "./languages.js";
 import { localeMarket, supportedMarkets } from "./location.js";
 
 const $ = (selector) => document.querySelector(selector);
-const elements = { setup:$("#setup"), app:$("#app"), status:$("#status"), market:$("#market"), language:$("#language"), marketName:$("#market-name"), shows:$("#shows"), showsSection:$("#shows-section"), episodes:$("#episodes"), episodesSection:$("#episodes-section"), episodesTitle:$("#episodes-title"), playerSection:$("#player-section"), player:$("#player"), nowPlaying:$("#now-playing"), resultsTitle:$("#results-title"), resultsKicker:$("#results-kicker") };
+const elements = { setup:$("#setup"), app:$("#app"), status:$("#status"), market:$("#market"), language:$("#language"), search:$("#search"), marketName:$("#market-name"), shows:$("#shows"), showsSection:$("#shows-section"), episodes:$("#episodes"), episodesSection:$("#episodes-section"), episodesTitle:$("#episodes-title"), playerSection:$("#player-section"), player:$("#player"), nowPlaying:$("#now-playing"), resultsTitle:$("#results-title"), resultsKicker:$("#results-kicker") };
 let market = "US"; let language = ""; let recommendationSeed = Date.now();
+let contextQuery = new URLSearchParams(window.location.search).get("q")?.trim() || "";
 
 function setStatus(message="",error=false) { elements.status.textContent=message; elements.status.classList.toggle("error",error); }
 function imageFor(item) { return item.images?.[0]?.url || "icons/256.png"; }
@@ -41,6 +42,14 @@ async function loadRecommendations() {
   try { renderShows(await recommendedShows(market,recommendationSeed,language)); if (elements.shows.children.length) setStatus(""); }
   catch(error) { setStatus(error.message,true); if(error.message.includes("Connect")) showSetup(); }
 }
+async function runSearch(query, kicker="SPOTIFY SEARCH") {
+  const trimmed=query.trim();
+  if (!trimmed) { contextQuery=""; elements.search.value=""; elements.resultsTitle.textContent="Recommended podcasts"; elements.resultsKicker.textContent="FOR YOUR MARKET"; return loadRecommendations(); }
+  contextQuery=trimmed; elements.search.value=trimmed; setStatus("Searching Spotify…"); elements.resultsTitle.textContent=`Results for “${trimmed}”`; elements.resultsKicker.textContent=kicker; elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden");
+  try { renderShows(await searchShows(trimmed,market,10,0,language)); if (elements.shows.children.length) setStatus(""); }
+  catch(error) { setStatus(error.message,true); }
+}
+async function refreshResults() { return contextQuery ? runSearch(contextQuery,"CONTEXT DISCOVERY") : loadRecommendations(); }
 async function openShow(show) {
   setStatus("Loading episodes…"); elements.episodesTitle.textContent=show.name; elements.showsSection.classList.add("hidden"); elements.episodesSection.classList.remove("hidden");
   try { renderEpisodes(await getEpisodes(show.id,market,language)); if (elements.episodes.children.length) setStatus(""); } catch(error) { setStatus(error.message,true); }
@@ -51,16 +60,18 @@ function playEpisode(episode) {
 async function initialize() {
   for (const item of supportedMarkets) { const option=document.createElement("option"); option.value=item.code; option.textContent=item.code; option.title=item.name; elements.market.append(option); }
   for (const item of supportedLanguages) { const option=document.createElement("option"); option.value=item.code; option.textContent=item.name; elements.language.append(option); }
-  const {selectedMarket,selectedLanguage} = await chrome.storage.local.get(["selectedMarket","selectedLanguage"]); setMarket(selectedMarket || localeMarket()); setLanguage(selectedLanguage || "");
-  if (!(await getAccessToken())) { showSetup(); return; } showApp(); await loadRecommendations();
+  const {selectedMarket,selectedLanguage,pendingContextQuery} = await chrome.storage.local.get(["selectedMarket","selectedLanguage","pendingContextQuery"]);
+  if (!contextQuery && pendingContextQuery) { contextQuery=pendingContextQuery.trim(); await chrome.storage.local.remove("pendingContextQuery"); }
+  setMarket(selectedMarket || localeMarket()); setLanguage(selectedLanguage || "");
+  if (!(await getAccessToken())) { showSetup(); return; } showApp(); if (contextQuery) await runSearch(contextQuery,"CONTEXT DISCOVERY"); else await loadRecommendations();
 }
 
-$("#connect").addEventListener("click",async()=>{ setStatus(""); try { await connect(); showApp(); await loadRecommendations(); } catch(error) { elements.setup.querySelector("p").textContent=error.message; } });
+$("#connect").addEventListener("click",async()=>{ setStatus(""); try { await connect(); showApp(); await refreshResults(); } catch(error) { elements.setup.querySelector("p").textContent=error.message; } });
 $("#settings").addEventListener("click",()=>chrome.runtime.openOptionsPage()); $("#configure").addEventListener("click",()=>chrome.runtime.openOptionsPage());
-elements.market.addEventListener("change",async(event)=>{ setMarket(event.target.value); recommendationSeed=Date.now(); await loadRecommendations(); });
-elements.language.addEventListener("change",async(event)=>{ setLanguage(event.target.value); recommendationSeed=Date.now(); await loadRecommendations(); });
-$("#refresh").addEventListener("click",async()=>{ recommendationSeed=Date.now(); await loadRecommendations(); });
+elements.market.addEventListener("change",async(event)=>{ setMarket(event.target.value); recommendationSeed=Date.now(); await refreshResults(); });
+elements.language.addEventListener("change",async(event)=>{ setLanguage(event.target.value); recommendationSeed=Date.now(); await refreshResults(); });
+$("#refresh").addEventListener("click",async()=>{ recommendationSeed=Date.now(); await refreshResults(); });
 $("#back").addEventListener("click",()=>{ elements.episodesSection.classList.add("hidden"); elements.showsSection.classList.remove("hidden"); setStatus(""); });
 $("#close-player").addEventListener("click",()=>{ elements.player.src="about:blank"; elements.playerSection.classList.add("hidden"); });
-$("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); const query=$("#search").value.trim(); if(!query){elements.resultsTitle.textContent="Recommended podcasts";elements.resultsKicker.textContent="FOR YOUR MARKET";return loadRecommendations();} setStatus("Searching Spotify…"); elements.resultsTitle.textContent=`Results for “${query}”`; elements.resultsKicker.textContent="SPOTIFY SEARCH"; elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden"); try{renderShows(await searchShows(query,market,10,0,language));if(elements.shows.children.length)setStatus("");}catch(error){setStatus(error.message,true);} });
+$("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); await runSearch(elements.search.value); });
 initialize();
