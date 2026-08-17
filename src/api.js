@@ -13,18 +13,24 @@ export async function searchShows(query, market, limit=8, offset=0, language="")
   // Language filtering happens after Spotify returns the catalogue page. Ask
   // for a wider page when a filter is active so a matching show ranked below
   // the first few results is not discarded before we can inspect it.
-  const requestLimit = language ? 50 : limit;
+  // Spotify reduced Search's maximum page size to 10 in February 2026.
+  const requestLimit = Math.min(10, language ? 10 : limit);
   const params = new URLSearchParams({ q:query, type:"show", market, limit:String(requestLimit), offset:String(offset) });
   const data = await spotify(`/search?${params}`);
   return data.shows?.items?.filter((show) => show && matchesLanguage(show, language)).slice(0, limit) || [];
 }
-export async function recommendedShows(market, seed=Date.now(), language="") {
+export async function recommendedShows(market, cycle=0, language="") {
   const themes = ["news","comedy","culture","science","stories","technology","history","wellness"];
-  const first = Math.abs(seed) % themes.length; const queries = [themes[first], themes[(first+3)%themes.length]];
+  const first = Math.abs(cycle) % themes.length; const queries = [themes[first], themes[(first+3)%themes.length]];
   const targetedQueries = languageSearchTermsFor(language);
-  const allQueries = [...queries, ...targetedQueries];
+  // Keep the selected language in every rotating query. Previously the same
+  // static language query dominated each refresh and Spotify returned the
+  // same first page repeatedly.
+  const allQueries = language
+    ? targetedQueries.flatMap((term) => queries.map((theme) => `${term} ${theme}`))
+    : queries;
   const limit = language ? 10 : 6;
-  const offset = language ? 0 : Math.abs(seed)%5;
+  const offset = Math.floor(Math.abs(cycle) / themes.length) * 5 % 50;
   const batches = await Promise.all(allQueries.map((query) => searchShows(query, market, limit, offset, language)));
   return [...new Map(batches.flat().map((show) => [show.id,show])).values()].slice(0,8);
 }

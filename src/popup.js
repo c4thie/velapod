@@ -5,7 +5,7 @@ import { localeMarket, supportedMarkets } from "./location.js";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = { setup:$("#setup"), app:$("#app"), status:$("#status"), market:$("#market"), language:$("#language"), search:$("#search"), marketName:$("#market-name"), shows:$("#shows"), showsSection:$("#shows-section"), episodes:$("#episodes"), episodesSection:$("#episodes-section"), episodesTitle:$("#episodes-title"), playerSection:$("#player-section"), player:$("#player"), nowPlaying:$("#now-playing"), resultsTitle:$("#results-title"), resultsKicker:$("#results-kicker") };
-let market = "US"; let language = ""; let recommendationSeed = Date.now();
+let market = "US"; let language = ""; let recommendationCycle = 0; let searchOffset = 0;
 let contextQuery = new URLSearchParams(window.location.search).get("q")?.trim() || "";
 
 function setStatus(message="",error=false) { elements.status.textContent=message; elements.status.classList.toggle("error",error); }
@@ -39,17 +39,17 @@ function renderEpisodes(episodes) {
 }
 async function loadRecommendations() {
   setStatus(language ? `Finding ${languageName(language)} podcasts available in your selected market…` : "Finding podcasts available in your selected market…"); elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden");
-  try { renderShows(await recommendedShows(market,recommendationSeed,language)); if (elements.shows.children.length) setStatus(""); }
+  try { renderShows(await recommendedShows(market,recommendationCycle,language)); if (elements.shows.children.length) setStatus(""); }
   catch(error) { setStatus(error.message,true); if(error.message.includes("Connect")) showSetup(); }
 }
-async function runSearch(query, kicker="SPOTIFY SEARCH") {
+async function runSearch(query, kicker="SPOTIFY SEARCH", offset=0) {
   const trimmed=query.trim();
   if (!trimmed) { contextQuery=""; elements.search.value=""; elements.resultsTitle.textContent="Recommended podcasts"; elements.resultsKicker.textContent="FOR YOUR MARKET"; return loadRecommendations(); }
   contextQuery=trimmed; elements.search.value=trimmed; setStatus("Searching Spotify…"); elements.resultsTitle.textContent=`Results for “${trimmed}”`; elements.resultsKicker.textContent=kicker; elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden");
-  try { renderShows(await searchShows(trimmed,market,10,0,language)); if (elements.shows.children.length) setStatus(""); }
+  try { renderShows(await searchShows(trimmed,market,10,offset,language)); if (elements.shows.children.length) setStatus(""); }
   catch(error) { setStatus(error.message,true); }
 }
-async function refreshResults() { return contextQuery ? runSearch(contextQuery,"CONTEXT DISCOVERY") : loadRecommendations(); }
+async function refreshResults() { return contextQuery ? runSearch(contextQuery,"CONTEXT DISCOVERY",searchOffset) : loadRecommendations(); }
 async function openShow(show) {
   setStatus("Loading episodes…"); elements.episodesTitle.textContent=show.name; elements.showsSection.classList.add("hidden"); elements.episodesSection.classList.remove("hidden");
   try { renderEpisodes(await getEpisodes(show.id,market,language)); if (elements.episodes.children.length) setStatus(""); } catch(error) { setStatus(error.message,true); }
@@ -68,10 +68,10 @@ async function initialize() {
 
 $("#connect").addEventListener("click",async()=>{ setStatus(""); try { await connect(); showApp(); await refreshResults(); } catch(error) { elements.setup.querySelector("p").textContent=error.message; } });
 $("#settings").addEventListener("click",()=>chrome.runtime.openOptionsPage()); $("#configure").addEventListener("click",()=>chrome.runtime.openOptionsPage());
-elements.market.addEventListener("change",async(event)=>{ setMarket(event.target.value); recommendationSeed=Date.now(); await refreshResults(); });
-elements.language.addEventListener("change",async(event)=>{ setLanguage(event.target.value); recommendationSeed=Date.now(); await refreshResults(); });
-$("#refresh").addEventListener("click",async()=>{ recommendationSeed=Date.now(); await refreshResults(); });
+elements.market.addEventListener("change",async(event)=>{ setMarket(event.target.value); recommendationCycle=0; searchOffset=0; await refreshResults(); });
+elements.language.addEventListener("change",async(event)=>{ setLanguage(event.target.value); recommendationCycle=0; searchOffset=0; await refreshResults(); });
+$("#refresh").addEventListener("click",async()=>{ recommendationCycle+=1; searchOffset=(searchOffset+10)%50; await refreshResults(); });
 $("#back").addEventListener("click",()=>{ elements.episodesSection.classList.add("hidden"); elements.showsSection.classList.remove("hidden"); setStatus(""); });
 $("#close-player").addEventListener("click",()=>{ elements.player.src="about:blank"; elements.playerSection.classList.add("hidden"); });
-$("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); await runSearch(elements.search.value); });
+$("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); searchOffset=0; await runSearch(elements.search.value); });
 initialize();
