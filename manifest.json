@@ -1,52 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "Spotify Podcast",
-  "version": "1.0",
-  "description": "Browse and play Spotify podcasts",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "declarativeContent",
-    "i18n",
-    "contextMenus",
-    "tabs"
-  ],
-  "host_permissions": [
-    "https://api.spotify.com/*",
-    "https://accounts.spotify.com/*",
-    "https://open.spotify.com/*",
-    "https://www.spotify.com/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
-  },
-  "icons": {
-    "128": "icons/128.png",
-    "64": "icons/64.png",
-    "32": "icons/32.png",
-    "16": "icons/16.png"
-  },
-  "action": {
-    "default_popup": "popup.html",
-    "default_name": "Spotify Podcast",
-    "default_icon": "icons/256.png",
-    "default_locale": "en"
-  },
-  "default_locale": "en",
-  "content_scripts": [
-    {
-      "matches": [
-        "https://open.spotify.com/*",
-        "https://open.spotify.com/embed-podcast/iframe-api/v1",
-        "<all_urls>"
-      ],
-      "js": ["src/content-script.js"],
-      "run_at": "document_start",
-      "all_frames": false
-    }
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; media-src *; object-src 'self'; frame-src https://embed-standalone.spotify.com/ https://open.spotify.com/;",
-    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals; script-src 'self' 'unsafe-inline' 'unsafe-eval'; child-src 'self';"
-  }
+  "name": "Spot the Pod",
+  "short_name": "Spot the Pod",
+  "version": "2.0.0",
+  "description": "Discover podcasts and listen with Spotify.",
+  "minimum_chrome_version": "109",
+  "permissions": ["storage", "identity"],
+  "host_permissions": ["https://api.spotify.com/*", "https://accounts.spotify.com/*"],
+  "action": { "default_title": "Spot the Pod", "default_popup": "popup.html", "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "128": "icons/128.png" } },
+  "options_page": "options.html",
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "64": "icons/64.png", "128": "icons/128.png", "256": "icons/256.png" },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'; frame-src https://open.spotify.com; img-src 'self' https://i.scdn.co data:" }
 }

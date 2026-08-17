@@ -1,24 +1,23 @@
-# Podcast Player Web Extension
+# Spot the Pod
 
-This is a web application that recommends available podcasts based on the user's geolocation and provides features to explore and manage podcasts. It utilizes the Spotify API to fetch podcast data, user subscriptions, and PostgreSQL to store podcast data manually.
+A Chrome extension for discovering podcasts and listening through Spotify.
 
-## Features
+## In 2.0
 
-- Browse and explore a variety of podcasts.
-- Refresh podcast recommendations.
-- Subscribe and unsubscribe to podcasts.
-- Search for specific shows and episodes.
+- Chrome Manifest V3 with only `storage` and `identity` permissions
+- Spotify Authorization Code with PKCE; no client secret or localhost backend
+- recommendations and manual language selection
+- podcast search, episode browsing
+- no content scripts, browsing-history access, remote JavaScript
 
-## Technologies Used
+## Configuration
 
-- HTML, CSS, JavaScript: Frontend development.
-- Node.js, Express.js: Backend server development.
-- PostgreSQL: Database for storing podcast recommendations.
-- Spotify API: Fetching podcast and user data.
-- Opera/Chrome Extension: Interface to integrate with the browser.
+1. Create an app in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
+2. Load this directory from `chrome://extensions` using **Load unpacked**.
+3. Open the extension's **Developer setup** page and copy its redirect URI.
+4. Add that exact HTTPS URI to the Spotify app's redirect URI allowlist.
+5. Paste the Spotify client ID into Developer setup and save.
 
-## Contributions
-Contributions to this project are welcome! Feel free to open issues and pull requests for any enhancements, bug fixes, or new features.
+## Privacy
 
-## License
-This project is licensed under the MIT License.
+See [PRIVACY.md](PRIVACY.md). Host the same policy at a public URL and add it to the Chrome Web Store listing before submission.

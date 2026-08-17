@@ -1,0 +1,31 @@
+.location-row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+  align-items:start;
+}
+
+.location-row strong{
+  white-space:nowrap;
+  font-size:15px;
+}
+
+.location-actions{
+  width:100%;
+  display:grid;
+  grid-template-columns:minmax(0, .7fr) minmax(0, 1.25fr);
+  align-items:center;
+  gap:7px;
+}
+
+.location-actions button{
+  white-space:nowrap;
+  padding:8px 10px;
+}
+
+.location-actions select{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  font-size:12px;
+}

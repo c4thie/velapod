@@ -1,217 +1,66 @@
-// Imports
-import {
-  fetchRandomRecommendedShows,
-  fetchSubscribedShows,
-  fetchToken,
-} from "./api.js";
-// import { createContextMenu } from "./context-menu.js";
-import { redirectToAuthCodeFlow } from "./oauth.js";
-import { createShowButtons, createMyShowButtons } from "./create-buttons.js";
-import { markets } from "./constants/markets.js";
+import { connect, getAccessToken } from "./auth.js";
+import { getEpisodes, recommendedShows, searchShows } from "./api.js";
+import { languageName, supportedLanguages } from "./languages.js";
+import { localeMarket, supportedMarkets } from "./location.js";
 
-// Get the user's language setting
-const userLanguage = chrome.i18n.getUILanguage();
-// Example of using localized messages
-const welcomeMessage = chrome.i18n.getMessage("welcomeMessage");
-console.log(welcomeMessage);
-// Use the user's language to get the corresponding country (for most cases)
-const userCountry = userLanguage.substr(-2);
+const $ = (selector) => document.querySelector(selector);
+const elements = { setup:$("#setup"), app:$("#app"), status:$("#status"), market:$("#market"), language:$("#language"), marketName:$("#market-name"), shows:$("#shows"), showsSection:$("#shows-section"), episodes:$("#episodes"), episodesSection:$("#episodes-section"), episodesTitle:$("#episodes-title"), playerSection:$("#player-section"), player:$("#player"), nowPlaying:$("#now-playing"), resultsTitle:$("#results-title"), resultsKicker:$("#results-kicker") };
+let market = "US"; let language = ""; let recommendationSeed = Date.now();
 
-let subscribedShowsData = [];
+function setStatus(message="",error=false) { elements.status.textContent=message; elements.status.classList.toggle("error",error); }
+function imageFor(item) { return item.images?.[0]?.url || "icons/256.png"; }
+function marketName(code) { return supportedMarkets.find((item)=>item.code===code)?.name || code; }
+function setMarket(code) { market=code; elements.market.value=code; elements.marketName.textContent=marketName(code); chrome.storage.local.set({selectedMarket:code}); }
+function setLanguage(code) { language=supportedLanguages.some((item)=>item.code===code) ? code : ""; elements.language.value=language; chrome.storage.local.set({selectedLanguage:language}); }
+function showSetup() { elements.setup.classList.remove("hidden"); elements.app.classList.add("hidden"); }
+function showApp() { elements.setup.classList.add("hidden"); elements.app.classList.remove("hidden"); }
 
-// Main function to initialize the popup
-export async function initializePopup() {
-  const authLink = document.getElementById("auth-link");
-  const auth = document.querySelector(".non-authorized");
-  const mainContainer = document.querySelector(".main-container");
-  const browser = document.querySelector(".podcast-selection-body");
-  const shuffle = document.querySelector(".shuffle");
-  const collapse = document.querySelector(".collapse");
-  const expand = document.querySelector(".expand");
-  const limitMessage = document.querySelector(".limit-message");
-
-  // Additional formatting for popup
-  const body = document.querySelector("body");
-  const iframe = document.querySelector("iframe");
-
-  // initially make sure limitMessage is blank
-  limitMessage.innerHTML = "";
-
-  // initially hide expand icon
-  expand.style.display = "none";
-
-  // Get the access token and its expiration timestamp from local storage
-  // const storageData = await new Promise((resolve) => {
-  //   chrome.storage.local.get(["accessToken", "tokenExpiration"], (result) =>
-  //     resolve(result)
-  //   );
-  // });
-  const accessToken = localStorage.getItem("access_token");
-  const tokenExpiration = localStorage.getItem("tokenExpiration");
-  console.log(
-    "accessToken, tokenExpiration, dateNOW",
-    accessToken,
-    tokenExpiration,
-    Date.now()
-  );
-
-  const selectedCountry = localStorage.getItem("selectedCountry");
-
-  // Refresh recommended shows on shuffle click
-  shuffle.addEventListener("click", async () => {
-    const shows = await fetchRandomRecommendedShows(selectedCountry);
-    createShowButtons(shows, accessToken);
-  });
-
-  // Open accordion when expand is clicked
-  expand.addEventListener("click", async () => {
-    body.style.height = "550px";
-    body.style.width = "600px";
-    iframe.style.width = "545px";
-    browser.style.display = "block";
-    collapse.style.display = "block";
-    expand.style.display = "none";
-  });
-
-  // When collapse is clicked, close accordion
-  collapse.addEventListener("click", async () => {
-    body.style.height = "157px";
-    body.style.width = "220px";
-    iframe.style.width = "170px";
-    browser.style.display = "none";
-    collapse.style.display = "none";
-    expand.style.display = "block";
-  });
-
-  if (accessToken && tokenExpiration && Date.now() < tokenExpiration) {
-    console.log("valid token");
-    // Token is valid, proceed with fetching and rendering data
-    auth.style.display = "none";
-    mainContainer.style.display = "block";
-
-    // Fetch and initialize subscribed shows
-    const myShowsData = await fetchSubscribedShows(accessToken);
-    subscribedShowsData = myShowsData;
-    console.log("myShowsData", myShowsData);
-    createMyShowButtons(myShowsData, accessToken);
-
-    // Fetch recommended shows
-    if (selectedCountry) {
-      const recShowsData = await fetchRandomRecommendedShows(selectedCountry);
-
-      // Handle recommendedShows data and update your UI accordingly
-      console.log("recShowsData", recShowsData);
-      createShowButtons(recShowsData, accessToken);
-    } else {
-      console.error("No selected country found.");
-    }
-  } else {
-    // Token is expired or not available, show the authorization link
-    console.log("token invalid");
-    auth.style.display = "flex";
-    mainContainer.style.display = "none";
-
-    // Create options for country selection
-    const select = document.querySelector("select");
-
-    markets.forEach((marketObj) => {
-      const option = document.createElement("option");
-      option.value = marketObj.code;
-      option.textContent = marketObj.label;
-      select.appendChild(option);
-    });
-
-    // Event listener for select element
-    select.addEventListener("change", (event) => {
-      const selectedCountry = event.target.value;
-      localStorage.setItem("selectedCountry", selectedCountry);
-      console.log("set selectedCountry", selectedCountry);
-    });
-
-    authLink.textContent = "Authorize with Spotify";
-
-    // Click event listener to the link
-    authLink.addEventListener("click", async (event) => {
-      event.preventDefault();
-      console.log("authLink clicked");
-      await redirectToAuthCodeFlow();
-      // After successful authorization, the page will be redirected
-      // and the initializePopup function will be called again with a valid token
-    });
+function renderShows(shows) {
+  elements.shows.replaceChildren();
+  if (!shows.length) { setStatus(language ? `No ${languageName(language)} podcasts found. Try another language or market.` : "No podcasts found. Try another search or market."); return; }
+  for (const show of shows) {
+    const button=document.createElement("button"); button.className="show-card"; button.type="button";
+    const image=document.createElement("img"); image.src=imageFor(show); image.alt="";
+    const title=document.createElement("span"); title.textContent=show.name; button.append(image,title);
+    button.addEventListener("click",()=>openShow(show)); elements.shows.append(button);
   }
 }
-
-// Initialize the popup when the DOM is ready
-document.addEventListener("DOMContentLoaded", async function () {
-  console.log("page loaded");
-  initializePopup();
-});
-
-// popup.js
-window.onload = async function () {
-  // Function to extract query parameters from the URL
-  function getQueryParam(url, name) {
-    const params = new URLSearchParams(new URL(url).search);
-    return params.get(name);
+function renderEpisodes(episodes) {
+  elements.episodes.replaceChildren();
+  if (!episodes.length) { setStatus(language ? `No ${languageName(language)} episodes are available for this show.` : "No playable episodes are available in this market."); return; }
+  for (const episode of episodes) {
+    const button=document.createElement("button"); button.className="episode"; button.type="button";
+    const image=document.createElement("img"); image.src=imageFor(episode); image.alt="";
+    const body=document.createElement("span"); const title=document.createElement("strong"); title.textContent=episode.name;
+    const meta=document.createElement("small"); const minutes=Math.max(1,Math.round((episode.duration_ms||0)/60000)); meta.textContent=`${episode.release_date||""} · ${minutes} min`;
+    body.append(title,meta); button.append(image,body); button.addEventListener("click",()=>playEpisode(episode)); elements.episodes.append(button);
   }
+}
+async function loadRecommendations() {
+  setStatus(language ? `Finding ${languageName(language)} podcasts available in your selected market…` : "Finding podcasts available in your selected market…"); elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden");
+  try { renderShows(await recommendedShows(market,recommendationSeed,language)); if (elements.shows.children.length) setStatus(""); }
+  catch(error) { setStatus(error.message,true); if(error.message.includes("Connect")) showSetup(); }
+}
+async function openShow(show) {
+  setStatus("Loading episodes…"); elements.episodesTitle.textContent=show.name; elements.showsSection.classList.add("hidden"); elements.episodesSection.classList.remove("hidden");
+  try { renderEpisodes(await getEpisodes(show.id,market,language)); if (elements.episodes.children.length) setStatus(""); } catch(error) { setStatus(error.message,true); }
+}
+function playEpisode(episode) {
+  elements.nowPlaying.textContent=episode.name; elements.player.src=`https://open.spotify.com/embed/episode/${encodeURIComponent(episode.id)}?utm_source=spot_the_pod&theme=0`; elements.playerSection.classList.remove("hidden"); window.scrollTo({top:0,behavior:"smooth"});
+}
+async function initialize() {
+  for (const item of supportedMarkets) { const option=document.createElement("option"); option.value=item.code; option.textContent=item.code; option.title=item.name; elements.market.append(option); }
+  for (const item of supportedLanguages) { const option=document.createElement("option"); option.value=item.code; option.textContent=item.name; elements.language.append(option); }
+  const {selectedMarket,selectedLanguage} = await chrome.storage.local.get(["selectedMarket","selectedLanguage"]); setMarket(selectedMarket || localeMarket()); setLanguage(selectedLanguage || "");
+  if (!(await getAccessToken())) { showSetup(); return; } showApp(); await loadRecommendations();
+}
 
-  // Get the authorization code from the URL
-  const authorizationCode = getQueryParam(window.location.href, "code");
-  const redirectUri = chrome.runtime.getURL("popup.html");
-
-  if (authorizationCode) {
-    // Authorization code is available, send it to backend for token exchange using an API call.
-    console.log("popup.js: Authorization Code:", authorizationCode);
-
-    const tokenResponse = await fetchToken(authorizationCode, redirectUri);
-    if (tokenResponse && tokenResponse.access_token) {
-      console.log(
-        "popup.js: token response retrieved successfully",
-        tokenResponse
-      );
-      const expirationTimestamp = Date.now() + tokenResponse.expires_in * 1000;
-
-      // Store the access token and its expiration timestamp in the extension's storage
-      chrome.storage.local.set(
-        {
-          accessToken: tokenResponse.access_token,
-          tokenExpiration: expirationTimestamp,
-        },
-        function () {
-          console.log("oauth.js: Access token stored.");
-          // Initialize popup after storing the token
-          initializePopup();
-        }
-      );
-      localStorage.setItem("access_token", tokenResponse.access_token);
-      localStorage.setItem("tokenExpiration", expirationTimestamp);
-      console.log(
-        "popup.js: Access token stored, access_token, tokenExpiration: " +
-          JSON.stringify(tokenResponse)
-      );
-
-      // Initialize popup after storing the token
-      // initializePopup();
-    } else {
-      console.log("popup.js: token response was not found", tokenResponse);
-      // } else {
-      //   console.log(
-      //     "oauth.js: couldn't find authentication code, restarting authcodeflow"
-      //   );
-      //   // await redirectToAuthCodeFlow();
-      // }
-    }
-  } else {
-    console.log(
-      "popup.js: No authorization code found in the URL.",
-      authorizationCode
-    );
-  }
-};
-
-// chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-//   const tab = tabs[0];
-//   chrome.tabs.update(tab.id, { url: "popup.html" });
-// });
-
-export { subscribedShowsData };
+$("#connect").addEventListener("click",async()=>{ setStatus(""); try { await connect(); showApp(); await loadRecommendations(); } catch(error) { elements.setup.querySelector("p").textContent=error.message; } });
+$("#settings").addEventListener("click",()=>chrome.runtime.openOptionsPage()); $("#configure").addEventListener("click",()=>chrome.runtime.openOptionsPage());
+elements.market.addEventListener("change",async(event)=>{ setMarket(event.target.value); recommendationSeed=Date.now(); await loadRecommendations(); });
+elements.language.addEventListener("change",async(event)=>{ setLanguage(event.target.value); recommendationSeed=Date.now(); await loadRecommendations(); });
+$("#refresh").addEventListener("click",async()=>{ recommendationSeed=Date.now(); await loadRecommendations(); });
+$("#back").addEventListener("click",()=>{ elements.episodesSection.classList.add("hidden"); elements.showsSection.classList.remove("hidden"); setStatus(""); });
+$("#close-player").addEventListener("click",()=>{ elements.player.src="about:blank"; elements.playerSection.classList.add("hidden"); });
+$("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); const query=$("#search").value.trim(); if(!query){elements.resultsTitle.textContent="Recommended podcasts";elements.resultsKicker.textContent="FOR YOUR MARKET";return loadRecommendations();} setStatus("Searching Spotify…"); elements.resultsTitle.textContent=`Results for “${query}”`; elements.resultsKicker.textContent="SPOTIFY SEARCH"; elements.showsSection.classList.remove("hidden"); elements.episodesSection.classList.add("hidden"); try{renderShows(await searchShows(query,market,10,0,language));if(elements.shows.children.length)setStatus("");}catch(error){setStatus(error.message,true);} });
+initialize();

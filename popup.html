@@ -1,99 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <meta
-      http-equiv="Content-Security-Policy"
-      content="child-src https://open.spotify.com/"
-    /> -->
-    <title>Spotify Podcast Extension</title>
-    <link rel="stylesheet" href="popup.css" />
-    <link
-      href="https://api.fontshare.com/v2/css?f[]=switzer@600,800,700,400,300,500&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    />
-  </head>
-
-  <body>
-    <!-- Display the authorization link -->
-    <div class="non-authorized">
-      <h2>Welcome to <span>Spot the Pod</span></h2>
-      <p>
-        Spot the Pod is a Podcast recommendation extension and a web player
-        which allows you to listen to your favorite podcasts while you surf the
-        web.
-      </p>
-      <select id="country" required>
-        <option value="" disabled selected>Select your Location</option>
-      </select>
-      <a id="auth-link" href="#"></a>
-    </div>
-    <div class="background"></div>
-    <div class="main-container">
-      <div class="podcast-container">
-        <!-- Player -->
-        <div class="iframe-container">
-          <iframe
-            id="embed-iframe"
-            style="border-radius: 12px"
-            src="https://open.spotify.com/embed/episode/6Za8hWs40hwFT7KKiPfttR?utm_source=generator&theme=0&t=0"
-            width="100%"
-            height="200"
-            frameborder="0"
-            allowfullscreen=""
-            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-            loading="lazy"
-          ></iframe>
-        </div>
-        <div class="toggle-container">
-          <span class="material-symbols-outlined collapse"> expand_less </span>
-          <span class="material-symbols-outlined expand hidden">
-            expand_more
-          </span>
-        </div>
-      </div>
-      <div class="podcast-selection">
-        <div class="podcast-selection-body">
-          <h2>Browse</h2>
-          <input type="search" id="search-input" placeholder="Search" />
-          <div class="allshows">
-            <div class="allshows-header">
-              <h3>Recommended Shows</h3>
-              <span class="material-symbols-outlined shuffle"> shuffle </span>
-            </div>
-            <div class="recshows-container"></div>
-          </div>
-          <!-- Display subscribed shows -->
-          <div class="myshows">
-            <h3>My Subscribed Shows</h3>
-            <div class="myshows-container"></div>
-          </div>
-
-          <!-- Display active show's episodes -->
-          <div class="episodes">
-            <div class="episodes-header">
-              <h3>Episodes</h3>
-              <span class="material-symbols-outlined" id="switchEpisodesButton">
-              </span>
-            </div>
-            <div class="episodes-container"></div>
-            <p class="limit-message"></p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- <script
-      allow="encrypted-media"
-      src="https://open.spotify.com/embed-podcast/iframe-api/v1"
-      async
-    ></script> -->
-    <script type="module" src="src/popup.js"></script>
-    <script type="module" src="src/search.js"></script>
-  </body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spot the Pod</title><link rel="stylesheet" href="popup.css"><link rel="stylesheet" href="language.css"></head>
+<body>
+  <header class="topbar"><div><p class="eyebrow">SPOT THE POD</p><h1>Find your next listen.</h1></div><button id="settings" class="icon-button" aria-label="Open settings" title="Settings">⚙</button></header>
+  <main>
+    <section id="setup" class="panel hidden" aria-labelledby="setup-title"><h2 id="setup-title">Connect Spotify</h2><p>Connect your account to search Spotify’s podcast catalogue. Your password is never visible to this extension.</p><button id="connect" class="primary">Connect with Spotify</button><button id="configure" class="text-button">Developer setup</button></section>
+    <section id="app" class="hidden">
+      <div class="location-row"><div><span class="label">SPOTIFY MARKET</span><strong id="market-name">your region</strong></div><div class="location-actions"><select id="market" aria-label="Choose Spotify market"></select><select id="language" aria-label="Filter by language"></select></div></div>
+      <form id="search-form" role="search"><input id="search" type="search" autocomplete="off" placeholder="Search podcasts" aria-label="Search podcasts"><button class="primary" type="submit">Search</button></form>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <section id="player-section" class="player hidden" aria-labelledby="now-playing"><div class="section-heading"><div><span class="label">NOW PLAYING</span><h2 id="now-playing">Episode</h2></div><button id="close-player" class="icon-button" aria-label="Close player">×</button></div><iframe id="player" title="Spotify podcast player" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="eager"></iframe></section>
+      <section id="shows-section" aria-labelledby="results-title"><div class="section-heading"><div><span class="label" id="results-kicker">FOR YOUR MARKET</span><h2 id="results-title">Recommended podcasts</h2></div><button id="refresh" class="icon-button" aria-label="Refresh recommendations" title="Refresh">↻</button></div><div id="shows" class="show-grid"></div></section>
+      <section id="episodes-section" class="hidden" aria-labelledby="episodes-title"><div class="section-heading"><div><span class="label">LATEST FROM</span><h2 id="episodes-title">Episodes</h2></div><button id="back" class="text-button">Back to shows</button></div><div id="episodes" class="episode-list"></div></section>
+    </section>
+  </main><script type="module" src="src/popup.js"></script>
+</body></html>
