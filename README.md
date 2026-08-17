@@ -1,24 +1,25 @@
 # Spot the Pod
 
-A Chrome extension for discovering podcasts and listening through Spotify.
+A Chrome extension for discovering podcasts and listening to episodes while browsing. It requires no user account, subscription, API key, or developer setup.
 
-## In 2.0
+## Features
 
-- Chrome Manifest V3 with only `storage`, `identity`, and `contextMenus` permissions
-- Spotify Authorization Code with PKCE; no client secret or localhost backend
-- recommendations and manual language selection
-- context-menu discovery from selected webpage text
-- podcast search, episode browsing
-- no content scripts, browsing-history access, remote JavaScript
+- podcast discovery
+- language-aware recommendations and search
+- short, medium, and long episode filters
+- episode playback from podcast publishers
+- rotating recommendations and selected-text context search
+- automatic catalogue storefront selection from the browser locale
+- no analytics, application server, or account system
+- Chrome Manifest V3 with only `storage` and `contextMenus` permissions
 
-## Configuration
+Podcast metadata is provided by Apple's public Search API. Apple documents country-specific podcast search and JSON results in its [Search API documentation](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/Searching.html).
 
-1. Create an app in the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard).
-2. Load this directory from `chrome://extensions` using **Load unpacked**.
-3. Open the extension's **Developer setup** page and copy its redirect URI.
-4. Add that exact HTTPS URI to the Spotify app's redirect URI allowlist.
-5. Paste the Spotify client ID into Developer setup and save.
+## Run locally
 
-## Privacy
+1. Open `chrome://extensions` (or Chromium browser Manage Extensions page).
+2. Enable **Developer mode**.
+3. Select **Load unpacked**.
+4. Choose this repository's root directory.
 
-See [PRIVACY.md](PRIVACY.md). Host the same policy at a public URL and add it to the Chrome Web Store listing before submission.
+No configuration is required. Reload the extension card after making code changes.

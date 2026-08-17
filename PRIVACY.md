@@ -1,24 +1,25 @@
 # Spot the Pod Privacy Policy
 
-Last updated: August 16, 2026
+Last updated: August 17, 2026
 
-Spot the Pod helps users discover and play Spotify podcasts.
+Spot the Pod helps users discover and play podcast episodes.
 
 ## Data used
 
-- **Spotify authorization:** Spotify OAuth access and refresh tokens are stored in Chrome's local extension storage and sent only to Spotify to perform requests initiated by the user.
-- **Podcast activity:** Search terms—including text selected for context-menu discovery—selected market codes, and catalogue requests are sent directly to Spotify. An optional language/episode length preference is stored locally and used to filter Spotify catalogue metadata in the extension; it is not sent to an application server. Spot the Pod does not operate an analytics or application server.
+- **Preferences:** The selected language and episode-length preference are stored locally in Chrome extension storage.
+- **Search activity:** Search terms, the country inferred from the browser locale, and catalogue requests are sent to Apple's public Search API.
+- **Playback:** Episode audio is streamed directly from the podcast publisher identified by the public catalogue. The publisher receives the network information normally sent when requesting online media.
+
+Spot the Pod does not require an account, collect precise location, operate an analytics service, or send information to an application server controlled by the publisher.
 
 ## Sharing and retention
 
-Spot the Pod does not sell user data or share it for advertising. The selected market, language preference, and Spotify tokens remain in Chrome's extension storage until the user disconnects Spotify, clears extension data, or uninstalls the extension.
-
-Spotify processes requests under its own privacy policy. Chrome handles extension installation under Google's policies.
+Spot the Pod does not sell user data or share it for advertising. Saved preferences remain locally until the user clears them in Settings, clears extension data, or uninstalls the extension. Apple and individual podcast publishers process network requests under their own policies.
 
 ## User choices
 
-Users can select a language manually. Users can remove Spotify tokens with **Disconnect Spotify** in settings or remove all locally stored data by uninstalling the extension.
+Users can change their preferences at any time and clear saved preferences from Settings.
 
 ## Contact
 
-testemail@test.com
+TBA

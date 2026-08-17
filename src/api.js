@@ -1,40 +1,54 @@
-import { getAccessToken } from "./auth.js";
-import { languageSearchTermsFor, matchesLanguage } from "./languages.js";
-const API = "https://api.spotify.com/v1";
-async function spotify(path) {
-  const token = await getAccessToken(); if (!token) throw new Error("Connect Spotify to continue.");
-  const response = await fetch(`${API}${path}`, { headers:{ Authorization:`Bearer ${token}` } });
-  if (response.status === 401) { await chrome.storage.local.remove("spotifyToken"); throw new Error("Your Spotify session expired. Connect again."); }
-  if (response.status === 429) throw new Error("Spotify is busy. Please try again shortly.");
-  if (!response.ok) throw new Error(`Spotify request failed (${response.status}).`);
+import { languageSearchTermsFor } from "./languages.js";
+
+const API="https://itunes.apple.com";
+
+async function catalogue(path,params) {
+  const response=await fetch(`${API}${path}?${new URLSearchParams(params)}`);
+  if (response.status===429) throw new Error("The podcast catalogue is busy. Please try again shortly.");
+  if (!response.ok) throw new Error(`Podcast catalogue request failed (${response.status}).`);
   return response.json();
 }
-export async function searchShows(query, market, limit=8, offset=0, language="") {
-  // Language filtering happens after Spotify returns the catalogue page. Ask
-  // for a wider page when a filter is active so a matching show ranked below
-  // the first few results is not discarded before we can inspect it.
-  // Spotify reduced Search's maximum page size to 10 in February 2026.
-  const requestLimit = Math.min(10, language ? 10 : limit);
-  const params = new URLSearchParams({ q:query, type:"show", market, limit:String(requestLimit), offset:String(offset) });
-  const data = await spotify(`/search?${params}`);
-  return data.shows?.items?.filter((show) => show && matchesLanguage(show, language)).slice(0, limit) || [];
+
+function showFrom(result) {
+  return {
+    id:String(result.collectionId || result.trackId),
+    name:result.collectionName || result.trackName,
+    author:result.artistName || "",
+    description:[result.artistName,result.primaryGenreName].filter(Boolean).join(" · "),
+    images:[{url:result.artworkUrl600 || result.artworkUrl100}],
+    externalUrl:result.collectionViewUrl || result.trackViewUrl,
+  };
 }
-export async function recommendedShows(market, cycle=0, language="") {
-  const themes = ["news","comedy","culture","science","stories","technology","history","wellness"];
-  const first = Math.abs(cycle) % themes.length; const queries = [themes[first], themes[(first+3)%themes.length]];
-  const targetedQueries = languageSearchTermsFor(language);
-  // Keep the selected language in every rotating query. Previously the same
-  // static language query dominated each refresh and Spotify returned the
-  // same first page repeatedly.
-  const allQueries = language
-    ? targetedQueries.flatMap((term) => queries.map((theme) => `${term} ${theme}`))
-    : queries;
-  const limit = language ? 10 : 6;
-  const offset = Math.floor(Math.abs(cycle) / themes.length) * 5 % 50;
-  const batches = await Promise.all(allQueries.map((query) => searchShows(query, market, limit, offset, language)));
-  return [...new Map(batches.flat().map((show) => [show.id,show])).values()].slice(0,8);
+
+function episodeFrom(result) {
+  return {
+    id:String(result.trackId || result.episodeGuid),
+    name:result.trackName,
+    description:result.description || result.shortDescription || "",
+    images:[{url:result.artworkUrl600 || result.artworkUrl160 || result.artworkUrl60}],
+    duration_ms:result.trackTimeMillis || 0,
+    release_date:result.releaseDate ? result.releaseDate.slice(0,10) : "",
+    audioUrl:(result.episodeUrl || result.previewUrl || "").replace(/^http:/,"https:"),
+    externalUrl:result.trackViewUrl,
+  };
 }
-export async function getEpisodes(showId, market, language="") {
-  const params = new URLSearchParams({ market, limit:"20" }); const data = await spotify(`/shows/${encodeURIComponent(showId)}/episodes?${params}`);
-  return data.items?.filter((episode) => episode && matchesLanguage(episode, language)) || [];
+
+export async function searchShows(query,market,limit=8,offset=0,language="") {
+  const languageTerm=languageSearchTermsFor(language)[0] || "";
+  const term=[query,languageTerm].filter(Boolean).join(" ");
+  const requestLimit=Math.min(200,Math.max(limit+offset,20));
+  const data=await catalogue("/search",{term,country:market,media:"podcast",entity:"podcast",limit:String(requestLimit),explicit:"No"});
+  return (data.results || []).slice(offset,offset+limit).map(showFrom);
+}
+
+export async function recommendedShows(market,cycle=0,language="") {
+  const themes=["news","comedy","culture","science","stories","technology","history","wellness"];
+  const theme=themes[Math.abs(cycle)%themes.length];
+  const offset=Math.floor(Math.abs(cycle)/themes.length)*8%40;
+  return searchShows(theme,market,8,offset,language);
+}
+
+export async function getEpisodes(showId,market) {
+  const data=await catalogue("/lookup",{id:showId,entity:"podcastEpisode",limit:"25",country:market});
+  return (data.results || []).filter((result)=>result.wrapperType==="podcastEpisode" && (result.episodeUrl || result.previewUrl)).map(episodeFrom);
 }

@@ -1,6 +1,6 @@
 {
   "name": "spot-the-pod-extension",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": { "check": "node scripts/validate.mjs", "package": "npm run check && node scripts/package.mjs" },

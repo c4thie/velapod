@@ -1,4 +1,4 @@
-// Spotify catalogue language codes use ISO 639-1
+// Podcast catalogue language preferences use ISO 639-1.
 export const supportedLanguages = [
   { code: "", name: "Any language" },
   { code: "en", name: "English" },
