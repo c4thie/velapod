@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Spot the Pod</title><link rel="stylesheet" href="popup.css"><link rel="stylesheet" href="language.css"></head>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VelaPod</title><link rel="stylesheet" href="popup.css"><link rel="stylesheet" href="language.css"></head>
 <body>
-  <header class="topbar"><div><p class="eyebrow">SPOT THE POD</p><h1>Find your next listen.</h1></div><button id="settings" class="icon-button" aria-label="Open settings" title="Settings">⚙</button></header>
+  <header class="topbar"><div><p class="eyebrow">VELAPOD</p><h1>Find your next pod.</h1></div><button id="settings" class="icon-button" aria-label="Open settings" title="Settings">⚙</button></header>
   <main>
     <section id="app">
       <div class="location-row"><div><span class="label">FILTER EPISODES</span><strong>Choose your listening style</strong></div><div class="location-actions"><select id="language" aria-label="Filter by language"></select><select id="duration" aria-label="Filter by episode length"><option value="">Any length</option><option value="short">Under 20 min</option><option value="medium">20–45 min</option><option value="long">Over 45 min</option></select></div></div>
@@ -10,6 +10,7 @@
       <section id="player-section" class="player hidden" aria-labelledby="now-playing"><div class="section-heading"><div><span class="label">NOW PLAYING</span><h2 id="now-playing">Episode</h2></div><button id="close-player" class="icon-button" aria-label="Close player">×</button></div><audio id="player" controls preload="metadata"></audio></section>
       <section id="shows-section" aria-labelledby="results-title"><div class="section-heading"><div><span class="label" id="results-kicker">DISCOVER</span><h2 id="results-title">Recommended podcasts</h2></div><button id="refresh" class="icon-button" aria-label="Refresh recommendations" title="Refresh">↻</button></div><div id="shows" class="show-grid"></div></section>
       <section id="episodes-section" class="hidden" aria-labelledby="episodes-title"><div class="section-heading"><div><span class="label">LATEST FROM</span><h2 id="episodes-title">Episodes</h2></div><button id="back" class="text-button">Back to shows</button></div><div id="episodes" class="episode-list"></div></section>
+      <p class="catalog-attribution">Podcast information provided by Apple's public catalogue.</p>
     </section>
   </main><script type="module" src="src/popup.js"></script>
 </body></html>

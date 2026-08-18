@@ -4,11 +4,11 @@ import { localeMarket } from "./location.js";
 
 const $ = (selector) => document.querySelector(selector);
 const elements = { app:$("#app"), status:$("#status"), language:$("#language"), duration:$("#duration"), search:$("#search"), shows:$("#shows"), showsSection:$("#shows-section"), episodes:$("#episodes"), episodesSection:$("#episodes-section"), episodesTitle:$("#episodes-title"), playerSection:$("#player-section"), player:$("#player"), nowPlaying:$("#now-playing"), resultsTitle:$("#results-title"), resultsKicker:$("#results-kicker") };
-let market = localeMarket(); let language = ""; let duration = ""; let recommendationCycle = 0; let searchOffset = 0; let currentEpisodes = [];
+let market = localeMarket(); let language = ""; let duration = ""; let recommendationCycle = 0; let searchOffset = 0; let currentEpisodes = []; let playingEpisodeId = "";
 let contextQuery = new URLSearchParams(window.location.search).get("q")?.trim() || "";
 
 function setStatus(message="",error=false) { elements.status.textContent=message; elements.status.classList.toggle("error",error); }
-function imageFor(item) { return item.images?.[0]?.url || "icons/256.png"; }
+function imageFor(item) { return item.images?.[0]?.url || ""; }
 function setLanguage(code) { language=supportedLanguages.some((item)=>item.code===code) ? code : ""; elements.language.value=language; chrome.storage.local.set({selectedLanguage:language}); }
 function setDuration(value) { duration=["short","medium","long"].includes(value) ? value : ""; elements.duration.value=duration; chrome.storage.local.set({selectedDuration:duration}); }
 function matchesDuration(episode) {
@@ -24,10 +24,12 @@ function renderShows(shows) {
   elements.shows.replaceChildren();
   if (!shows.length) { setStatus(language ? `No ${languageName(language)} podcasts found. Try another language.` : "No podcasts found. Try another search."); return; }
   for (const show of shows) {
-    const button=document.createElement("button"); button.className="show-card"; button.type="button";
-    const image=document.createElement("img"); image.src=imageFor(show); image.alt="";
-    const title=document.createElement("span"); title.textContent=show.name; button.append(image,title);
-    button.addEventListener("click",()=>openShow(show)); elements.shows.append(button);
+    const card=document.createElement("article"); card.className="show-card";
+    const button=document.createElement("button"); button.className="show-open"; button.type="button";
+    const artwork=imageFor(show); const image=document.createElement("img"); image.alt=""; if (artwork) image.src=artwork;
+    const title=document.createElement("span"); title.textContent=show.name; if (artwork) button.append(image); button.append(title);
+    const link=document.createElement("a"); link.className="catalog-link"; link.href=show.externalUrl; link.target="_blank"; link.rel="noopener noreferrer"; link.textContent="View on Apple Podcasts ↗";
+    button.addEventListener("click",()=>openShow(show)); card.append(button,link); elements.shows.append(card);
   }
 }
 function renderEpisodes(episodes) {
@@ -35,11 +37,13 @@ function renderEpisodes(episodes) {
   const filtered=episodes.filter(matchesDuration);
   if (!filtered.length) { setStatus(duration ? "No episodes match that length. Try another duration." : (language ? `No ${languageName(language)} episodes are available for this show.` : "No playable episodes are available for this show.")); return; }
   for (const episode of filtered) {
+    const card=document.createElement("article"); card.className="episode-card";
     const button=document.createElement("button"); button.className="episode"; button.type="button";
-    const image=document.createElement("img"); image.src=imageFor(episode); image.alt="";
+    const artwork=imageFor(episode); const image=document.createElement("img"); image.alt=""; if (artwork) image.src=artwork;
     const body=document.createElement("span"); const title=document.createElement("strong"); title.textContent=episode.name;
     const meta=document.createElement("small"); const minutes=Math.max(1,Math.round((episode.duration_ms||0)/60000)); meta.textContent=`${episode.release_date||""} · ${minutes} min`;
-    body.append(title,meta); button.append(image,body); button.addEventListener("click",()=>playEpisode(episode)); elements.episodes.append(button);
+    const link=document.createElement("a"); link.className="catalog-link"; link.href=episode.externalUrl; link.target="_blank"; link.rel="noopener noreferrer"; link.textContent="View on Apple Podcasts ↗";
+    body.append(title,meta); if (artwork) button.append(image); button.append(body); button.addEventListener("click",()=>playEpisode(episode)); card.append(button,link); elements.episodes.append(card);
   }
 }
 async function loadRecommendations() {
@@ -60,7 +64,7 @@ async function openShow(show) {
   try { currentEpisodes=await getEpisodes(show.id,market,language); renderEpisodes(currentEpisodes); if (elements.episodes.children.length) setStatus(""); } catch(error) { setStatus(error.message,true); }
 }
 function playEpisode(episode) {
-  elements.nowPlaying.textContent=episode.name; elements.player.src=episode.audioUrl; elements.playerSection.classList.remove("hidden"); elements.player.play().catch(()=>{}); window.scrollTo({top:0,behavior:"smooth"});
+  playingEpisodeId=episode.id; elements.nowPlaying.textContent=episode.name; elements.player.src=episode.audioUrl; elements.playerSection.classList.remove("hidden"); elements.player.play().catch(()=>{}); window.scrollTo({top:0,behavior:"smooth"});
 }
 async function initialize() {
   await chrome.storage.local.remove("selectedMarket");
@@ -77,5 +81,6 @@ elements.duration.addEventListener("change",(event)=>{ setDuration(event.target.
 $("#refresh").addEventListener("click",async()=>{ recommendationCycle+=1; searchOffset=(searchOffset+10)%50; await refreshResults(); });
 $("#back").addEventListener("click",()=>{ elements.episodesSection.classList.add("hidden"); elements.showsSection.classList.remove("hidden"); setStatus(""); });
 $("#close-player").addEventListener("click",()=>{ elements.player.pause(); elements.player.removeAttribute("src"); elements.player.load(); elements.playerSection.classList.add("hidden"); });
+elements.player.addEventListener("error",()=>{ if (!playingEpisodeId) return; currentEpisodes=currentEpisodes.filter((episode)=>episode.id!==playingEpisodeId); playingEpisodeId=""; elements.playerSection.classList.add("hidden"); renderEpisodes(currentEpisodes); setStatus("That publisher’s audio is unavailable, so the episode was removed.",true); });
 $("#search-form").addEventListener("submit",async(event)=>{ event.preventDefault(); searchOffset=0; await runSearch(elements.search.value); });
 initialize();

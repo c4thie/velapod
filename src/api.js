@@ -28,7 +28,7 @@ function episodeFrom(result) {
     images:[{url:result.artworkUrl600 || result.artworkUrl160 || result.artworkUrl60}],
     duration_ms:result.trackTimeMillis || 0,
     release_date:result.releaseDate ? result.releaseDate.slice(0,10) : "",
-    audioUrl:(result.episodeUrl || result.previewUrl || "").replace(/^http:/,"https:"),
+    audioUrl:result.episodeUrl || result.previewUrl || "",
     externalUrl:result.trackViewUrl,
   };
 }

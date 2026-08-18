@@ -1,4 +1,4 @@
-const MENU_ID = "spot-the-pod-search-selection";
+const MENU_ID = "velapod-search-selection";
 
 function createContextMenu() {
   chrome.contextMenus.removeAll(() => {

@@ -1,4 +1,4 @@
-# Spot the Pod
+# VelaPod
 
 A Chrome extension for discovering podcasts and listening to episodes while browsing. It requires no user account, subscription, API key, or developer setup.
 
@@ -15,7 +15,9 @@ A Chrome extension for discovering podcasts and listening to episodes while brow
 
 Podcast metadata is provided by Apple's public Search API. Apple documents country-specific podcast search and JSON results in its [Search API documentation](https://developer.apple.com/library/archive/documentation/AudioVideo/Conceptual/iTuneSearchAPI/Searching.html).
 
-## Run locally
+Every catalogue card links to its Apple Podcasts page and the interface attributes Apple as the metadata source. Episode audio is streamed directly from publisher-hosted URLs and is never copied or cached.
+
+## Run it yourself
 
 1. Open `chrome://extensions` (or Chromium browser Manage Extensions page).
 2. Enable **Developer mode**.
